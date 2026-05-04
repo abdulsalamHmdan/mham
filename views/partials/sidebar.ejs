@@ -1,0 +1,46 @@
+<aside class="sidebar">
+  <div class="brand">
+    <div class="brand-logo">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21h18M5 21V8l7-5 7 5v13M9 21v-6h6v6"/></svg>
+    </div>
+    <div class="brand-text">
+      <div class="brand-title">الاتصال المؤسسي</div>
+      <div class="brand-sub">لوحة المتابعة</div>
+    </div>
+  </div>
+
+  <nav class="nav">
+    <% if (user && user.role === 'executive') { %>
+      <a class="nav-link <%= path.startsWith('/dashboard') ? 'active' : '' %>" href="/dashboard">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>
+        <span>لوحة القيادة</span>
+      </a>
+    <% } else if (user) { %>
+      <a class="nav-link <%= path.startsWith('/employee') ? 'active' : '' %>" href="/employee">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3 8-8"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+        <span>إدخال البيانات</span>
+      </a>
+    <% } %>
+    <% if (user) { %>
+      <a class="nav-link <%= path.startsWith('/tasks') ? 'active' : '' %>" href="/tasks">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+        <span>مهامي</span>
+      </a>
+    <% } %>
+  </nav>
+
+  <% if (user) { %>
+    <div class="user-card">
+      <div class="user-avatar"><%= user.name.charAt(0) %></div>
+      <div class="user-info">
+        <div class="user-name"><%= user.name %></div>
+        <div class="user-role"><%= user.role === 'executive' ? 'مدير تنفيذي' : 'موظف' %></div>
+      </div>
+      <form action="/logout" method="POST" class="logout-form">
+        <button class="logout-btn" title="تسجيل الخروج" type="submit">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+        </button>
+      </form>
+    </div>
+  <% } %>
+</aside>

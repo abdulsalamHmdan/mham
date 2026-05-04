@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <%- include('partials/head') %>
+  <script src="/socket.io/socket.io.js" defer></script>
+</head>
+<body>
+  <div class="layout">
+    <%- include('partials/sidebar') %>
+
+    <main class="main">
+      <header class="page-header">
+        <div>
+          <h1 class="page-title">قسم <%= departmentLabel %></h1>
+          <p class="page-sub">إدخال بيانات اليوم — مرحباً <%= user.name %></p>
+        </div>
+        <span class="dept-badge dept-<%= department %>"><%= departmentLabel %></span>
+      </header>
+
+      <% if (success) { %>
+        <div class="alert alert-success">تم حفظ البيانات بنجاح.</div>
+      <% } %>
+
+      <section class="panel">
+        <div class="panel-head">
+          <h3>تعبئة البيانات</h3>
+          <span class="muted">جميع الحقول الرقمية تقبل أرقاماً صحيحة فقط</span>
+        </div>
+        <div class="panel-body">
+          <form method="POST" action="/employee/submit" class="form-grid">
+
+            <% if (department === 'financial') { %>
+              <label class="field">
+                <span>كبار الداعمين (ر.س)</span>
+                <input type="number" name="majorDonors" min="0" step="1" placeholder="0" required>
+              </label>
+              <label class="field">
+                <span>منصة التبرعات (ر.س)</span>
+                <input type="number" name="donationPlatform" min="0" step="1" placeholder="0" required>
+              </label>
+              <label class="field">
+                <span>كشك التبرعات (ر.س)</span>
+                <input type="number" name="donationKiosk" min="0" step="1" placeholder="0" required>
+              </label>
+            <% } else if (department === 'media') { %>
+              <label class="field">
+                <span>عدد التصاميم</span>
+                <input type="number" name="count" min="0" step="1" placeholder="0" required>
+              </label>
+              <label class="field">
+                <span>عنوان / موضوع التصاميم (اختياري)</span>
+                <input type="text" name="title" placeholder="مثال: حملة شهر رمضان">
+              </label>
+            <% } else if (department === 'content') { %>
+              <label class="field">
+                <span>عدد المنشورات</span>
+                <input type="number" name="count" min="0" step="1" placeholder="0" required>
+              </label>
+              <label class="field">
+                <span>المنصة (اختياري)</span>
+                <input type="text" name="platform" placeholder="مثال: تويتر، إنستجرام">
+              </label>
+            <% } else if (department === 'followup') { %>
+              <label class="field">
+                <span>زيارات من الجمعية لجهة خارجية</span>
+                <input type="number" name="associationToExternal" min="0" step="1" placeholder="0" required>
+              </label>
+              <label class="field">
+                <span>زيارات من جهة خارجية للجمعية</span>
+                <input type="number" name="externalToAssociation" min="0" step="1" placeholder="0" required>
+              </label>
+              <label class="field">
+                <span>زيارات الموقع الإلكتروني</span>
+                <input type="number" name="websiteVisits" min="0" step="1" placeholder="0" required>
+              </label>
+            <% } %>
+
+            <label class="field">
+              <span>التاريخ</span>
+              <input type="date" name="date" value="<%= new Date().toISOString().slice(0,10) %>">
+            </label>
+            <label class="field field-full">
+              <span>ملاحظات (اختياري)</span>
+              <textarea name="note" rows="2" placeholder="أي ملاحظات إضافية"></textarea>
+            </label>
+
+            <div class="form-actions">
+              <button type="submit" class="btn btn-primary">تحديث البيانات</button>
+            </div>
+          </form>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-head">
+          <h3>آخر الإدخالات</h3>
+          <span class="muted">آخر 10 إدخالات</span>
+        </div>
+        <div class="panel-body">
+          <% if (!recent.length) { %>
+            <div class="empty">لا توجد إدخالات بعد.</div>
+          <% } else { %>
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>التاريخ</th>
+                  <% if (department === 'financial') { %>
+                    <th>كبار الداعمين</th><th>المنصة</th><th>الكشك</th><th>الإجمالي</th>
+                  <% } else if (department === 'media') { %>
+                    <th>عدد التصاميم</th><th>العنوان</th>
+                  <% } else if (department === 'content') { %>
+                    <th>عدد المنشورات</th><th>المنصة</th>
+                  <% } else if (department === 'followup') { %>
+                    <th>من الجمعية</th><th>للجمعية</th><th>الموقع</th><th>الإجمالي</th>
+                  <% } %>
+                  <th>الملاحظات</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% recent.forEach(function(r) { %>
+                  <tr>
+                    <td><%= new Date(r.date).toLocaleDateString('ar-SA') %></td>
+                    <% if (department === 'financial') {
+                         const total = (r.majorDonors||0)+(r.donationPlatform||0)+(r.donationKiosk||0); %>
+                      <td><%= (r.majorDonors||0).toLocaleString('ar-SA') %></td>
+                      <td><%= (r.donationPlatform||0).toLocaleString('ar-SA') %></td>
+                      <td><%= (r.donationKiosk||0).toLocaleString('ar-SA') %></td>
+                      <td><strong><%= total.toLocaleString('ar-SA') %></strong></td>
+                    <% } else if (department === 'media') { %>
+                      <td><%= (r.count||0).toLocaleString('ar-SA') %></td>
+                      <td><%= r.title || '—' %></td>
+                    <% } else if (department === 'content') { %>
+                      <td><%= (r.count||0).toLocaleString('ar-SA') %></td>
+                      <td><%= r.platform || '—' %></td>
+                    <% } else if (department === 'followup') {
+                         const total = (r.associationToExternal||0)+(r.externalToAssociation||0)+(r.websiteVisits||0); %>
+                      <td><%= (r.associationToExternal||0).toLocaleString('ar-SA') %></td>
+                      <td><%= (r.externalToAssociation||0).toLocaleString('ar-SA') %></td>
+                      <td><%= (r.websiteVisits||0).toLocaleString('ar-SA') %></td>
+                      <td><strong><%= total.toLocaleString('ar-SA') %></strong></td>
+                    <% } %>
+                    <td class="muted"><%= r.note || '—' %></td>
+                  </tr>
+                <% }) %>
+              </tbody>
+            </table>
+          <% } %>
+        </div>
+      </section>
+    </main>
+  </div>
+  <script src="/js/employee.js"></script>
+</body>
+</html>

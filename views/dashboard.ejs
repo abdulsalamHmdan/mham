@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <%- include('partials/head') %>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+  <script src="/socket.io/socket.io.js"></script>
+</head>
+<body>
+  <div class="layout">
+    <%- include('partials/sidebar') %>
+
+    <main class="main">
+      <header class="page-header">
+        <div>
+          <h1 class="page-title">لوحة القيادة</h1>
+          <p class="page-sub">نظرة عامة على أداء الإدارة — مرحباً <%= user.name %></p>
+        </div>
+        <div class="period-tabs" role="tablist">
+          <button class="period-tab" data-period="today">اليوم</button>
+          <button class="period-tab" data-period="week">أسبوع</button>
+          <button class="period-tab" data-period="month">شهر</button>
+          <button class="period-tab" data-period="year">سنة</button>
+          <button class="period-tab active" data-period="all">الكل</button>
+        </div>
+      </header>
+
+      <section class="kpi-grid">
+        <article class="kpi-card kpi-financial" data-expand="financial-detail">
+          <div class="kpi-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12V7H5a2 2 0 010-4h14v4"/><path d="M3 5v14a2 2 0 002 2h16v-5"/><path d="M18 12a2 2 0 100 4h3v-4z"/></svg>
+          </div>
+          <div class="kpi-body">
+            <div class="kpi-label">إجمالي الإيرادات</div>
+            <div class="kpi-value" data-stat="revenue.total"><%= stats.revenue.total.toLocaleString('ar-SA') %></div>
+            <div class="kpi-foot">ريال سعودي</div>
+          </div>
+          <div class="kpi-chevron">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+          </div>
+        </article>
+
+        <article class="kpi-card kpi-media" data-expand="media-detail">
+          <div class="kpi-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 19l7-7 3 3-7 7-3-3z"/><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/><path d="M2 2l7.586 7.586"/><circle cx="11" cy="11" r="2"/></svg>
+          </div>
+          <div class="kpi-body">
+            <div class="kpi-label">عدد التصاميم</div>
+            <div class="kpi-value" data-stat="designs.total"><%= stats.designs.total.toLocaleString('ar-SA') %></div>
+            <div class="kpi-foot">تصميم منجز</div>
+          </div>
+          <div class="kpi-chevron">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+          </div>
+        </article>
+
+        <article class="kpi-card kpi-content" data-expand="content-detail">
+          <div class="kpi-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+          </div>
+          <div class="kpi-body">
+            <div class="kpi-label">عدد المنشورات</div>
+            <div class="kpi-value" data-stat="publications.total"><%= stats.publications.total.toLocaleString('ar-SA') %></div>
+            <div class="kpi-foot">منشور</div>
+          </div>
+          <div class="kpi-chevron">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+          </div>
+        </article>
+
+        <article class="kpi-card kpi-visits" data-expand="visits-detail">
+          <div class="kpi-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          </div>
+          <div class="kpi-body">
+            <div class="kpi-label">عدد الزيارات</div>
+            <div class="kpi-value" data-stat="visits.total"><%= stats.visits.total.toLocaleString('ar-SA') %></div>
+            <div class="kpi-foot">زيارة</div>
+          </div>
+          <div class="kpi-chevron">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+          </div>
+        </article>
+      </section>
+
+      <section class="details-grid">
+        <div class="panel panel-collapsible" id="financial-detail">
+          <div class="panel-head">
+            <h3>تفصيل الإيرادات</h3>
+            <span class="dot dot-financial"></span>
+          </div>
+          <div class="panel-body donut-row">
+            <div class="donut-wrap"><canvas id="revenueDonut"></canvas></div>
+            <ul class="legend">
+              <li><span class="sw" style="background:#10b981"></span><span>كبار الداعمين</span><strong data-stat="revenue.majorDonors"><%= stats.revenue.majorDonors.toLocaleString('ar-SA') %></strong></li>
+              <li><span class="sw" style="background:#34d399"></span><span>منصة التبرعات</span><strong data-stat="revenue.donationPlatform"><%= stats.revenue.donationPlatform.toLocaleString('ar-SA') %></strong></li>
+              <li><span class="sw" style="background:#6ee7b7"></span><span>كشك التبرعات</span><strong data-stat="revenue.donationKiosk"><%= stats.revenue.donationKiosk.toLocaleString('ar-SA') %></strong></li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="panel panel-collapsible" id="visits-detail">
+          <div class="panel-head">
+            <h3>تفصيل الزيارات</h3>
+            <span class="dot dot-visits"></span>
+          </div>
+          <div class="panel-body">
+            <canvas id="visitsBar" height="180"></canvas>
+          </div>
+        </div>
+
+        <div class="panel panel-collapsible" id="media-detail">
+          <div class="panel-head">
+            <h3>الإعلام — التصاميم</h3>
+            <span class="dot dot-media"></span>
+          </div>
+          <div class="panel-body big-figure">
+            <div class="big-num" data-stat="designs.total"><%= stats.designs.total.toLocaleString('ar-SA') %></div>
+            <div class="big-label">إجمالي التصاميم خلال الفترة المختارة</div>
+          </div>
+        </div>
+
+        <div class="panel panel-collapsible" id="content-detail">
+          <div class="panel-head">
+            <h3>المحتوى المنشور</h3>
+            <span class="dot dot-content"></span>
+          </div>
+          <div class="panel-body big-figure">
+            <div class="big-num" data-stat="publications.total"><%= stats.publications.total.toLocaleString('ar-SA') %></div>
+            <div class="big-label">إجمالي المنشورات خلال الفترة المختارة</div>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-head">
+          <h3>إنجاز المهام الفردية</h3>
+          <span class="muted"><span data-stat="tasks.done"><%= stats.tasks.done %></span> من <span data-stat="tasks.total"><%= stats.tasks.total %></span></span>
+        </div>
+        <div class="panel-body">
+          <div class="progress">
+            <div class="progress-bar" style="width: <%= stats.tasks.progress %>%" data-stat="tasks.progress"><%= stats.tasks.progress %>%</div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    window.__INITIAL_STATS__ = <%- JSON.stringify(stats) %>;
+  </script>
+  <script src="/js/dashboard.js"></script>
+</body>
+</html>

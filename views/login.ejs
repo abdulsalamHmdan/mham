@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <%- include('partials/head') %>
+</head>
+<body class="login-body">
+  <div class="login-shell">
+    <div class="login-card">
+      <div class="login-brand">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21h18M5 21V8l7-5 7 5v13M9 21v-6h6v6"/></svg>
+      </div>
+      <h1>الاتصال المؤسسي</h1>
+      <p class="login-sub">لوحة متابعة الإدارة التنفيذية</p>
+
+      <% if (error) { %>
+        <div class="alert alert-error"><%= error %></div>
+      <% } %>
+
+      <form method="POST" action="/login" class="login-form">
+        <label class="field">
+          <span>اسم المستخدم</span>
+          <input type="text" name="username" required autocomplete="username" />
+        </label>
+        <label class="field">
+          <span>كلمة المرور</span>
+          <input type="password" name="password" required autocomplete="current-password" />
+        </label>
+        <button type="submit" class="btn btn-primary btn-block">تسجيل الدخول</button>
+      </form>
+    </div>
+  </div>
+</body>
+</html>
