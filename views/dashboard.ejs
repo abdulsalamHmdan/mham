@@ -13,15 +13,9 @@
       <header class="page-header">
         <div>
           <h1 class="page-title">لوحة القيادة</h1>
-          <p class="page-sub">نظرة عامة على أداء الإدارة — مرحباً <%= user.name %></p>
+          <p class="page-sub">أرقام الأسبوع الحالي <%= weekLabel %> — مرحباً <%= user.name %></p>
         </div>
-        <div class="period-tabs" role="tablist">
-          <button class="period-tab" data-period="today">اليوم</button>
-          <button class="period-tab" data-period="week">أسبوع</button>
-          <button class="period-tab" data-period="month">شهر</button>
-          <button class="period-tab" data-period="year">سنة</button>
-          <button class="period-tab active" data-period="all">الكل</button>
-        </div>
+        <span class="dept-badge">متابعة أسبوعية</span>
       </header>
 
       <section class="kpi-grid">
@@ -92,7 +86,7 @@
             <div class="donut-wrap"><canvas id="revenueDonut"></canvas></div>
             <ul class="legend">
               <li><span class="sw" style="background:#10b981"></span><span>كبار الداعمين</span><strong data-stat="revenue.majorDonors"><%= stats.revenue.majorDonors.toLocaleString('ar-SA') %></strong></li>
-              <li><span class="sw" style="background:#34d399"></span><span>منصة التبرعات</span><strong data-stat="revenue.donationPlatform"><%= stats.revenue.donationPlatform.toLocaleString('ar-SA') %></strong></li>
+              <li><span class="sw" style="background:#34d399"></span><span>ديسق</span><strong data-stat="revenue.donationPlatform"><%= stats.revenue.donationPlatform.toLocaleString('ar-SA') %></strong></li>
               <li><span class="sw" style="background:#6ee7b7"></span><span>كشك التبرعات</span><strong data-stat="revenue.donationKiosk"><%= stats.revenue.donationKiosk.toLocaleString('ar-SA') %></strong></li>
             </ul>
           </div>
@@ -115,7 +109,7 @@
           </div>
           <div class="panel-body big-figure">
             <div class="big-num" data-stat="designs.total"><%= stats.designs.total.toLocaleString('ar-SA') %></div>
-            <div class="big-label">إجمالي التصاميم خلال الفترة المختارة</div>
+            <div class="big-label">إجمالي التصاميم خلال الأسبوع الحالي</div>
           </div>
         </div>
 
@@ -126,7 +120,7 @@
           </div>
           <div class="panel-body big-figure">
             <div class="big-num" data-stat="publications.total"><%= stats.publications.total.toLocaleString('ar-SA') %></div>
-            <div class="big-label">إجمالي المنشورات خلال الفترة المختارة</div>
+            <div class="big-label">إجمالي المنشورات خلال الأسبوع الحالي</div>
           </div>
         </div>
       </section>

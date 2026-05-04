@@ -6,24 +6,12 @@ const Design = require('../models/Design');
 const Publication = require('../models/Publication');
 const Visit = require('../models/Visit');
 const Task = require('../models/Task');
+const { currentWeekDateFilter, getCurrentWeekRange, formatWeekLabel } = require('../utils/week');
 
 router.use(requireRole('executive'));
 
-function periodFilter(period) {
-  const now = new Date();
-  const start = new Date(now);
-  switch (period) {
-    case 'today': start.setHours(0, 0, 0, 0); break;
-    case 'week': start.setDate(now.getDate() - 7); break;
-    case 'month': start.setMonth(now.getMonth() - 1); break;
-    case 'year': start.setFullYear(now.getFullYear() - 1); break;
-    default: return {};
-  }
-  return { date: { $gte: start } };
-}
-
-async function gatherStats(period) {
-  const filter = periodFilter(period);
+async function gatherStats() {
+  const filter = currentWeekDateFilter();
 
   const [revenues, designs, publications, visits, tasks] = await Promise.all([
     Revenue.find(filter).lean(),
@@ -57,7 +45,8 @@ async function gatherStats(period) {
   const tasksProgress = tasksTotal === 0 ? 0 : Math.round((tasksDone / tasksTotal) * 100);
 
   return {
-    period: period || 'all',
+    period: 'week',
+    weekLabel: formatWeekLabel(),
     revenue: { total: revenueTotal, ...revenueBreakdown },
     designs: { total: designsTotal },
     publications: { total: publicationsTotal },
@@ -68,14 +57,18 @@ async function gatherStats(period) {
 
 router.get('/', async (req, res, next) => {
   try {
-    const stats = await gatherStats(req.query.period);
-    res.render('dashboard', { title: 'لوحة المدير التنفيذي', stats });
+    const stats = await gatherStats();
+    res.render('dashboard', {
+      title: 'لوحة المدير التنفيذي',
+      stats,
+      weekLabel: formatWeekLabel(getCurrentWeekRange())
+    });
   } catch (err) { next(err); }
 });
 
 router.get('/stats', async (req, res, next) => {
   try {
-    res.json(await gatherStats(req.query.period));
+    res.json(await gatherStats());
   } catch (err) { next(err); }
 });
 

@@ -12,13 +12,16 @@
       <header class="page-header">
         <div>
           <h1 class="page-title">قسم <%= departmentLabel %></h1>
-          <p class="page-sub">إدخال بيانات اليوم — مرحباً <%= user.name %></p>
+          <p class="page-sub">متابعة أسبوعية <%= weekLabel %> — مرحباً <%= user.name %></p>
         </div>
         <span class="dept-badge dept-<%= department %>"><%= departmentLabel %></span>
       </header>
 
       <% if (success) { %>
         <div class="alert alert-success">تم حفظ البيانات بنجاح.</div>
+      <% } %>
+      <% if (outsideWeek) { %>
+        <div class="alert alert-error">لا يمكن حفظ إدخال خارج الأسبوع الحالي.</div>
       <% } %>
 
       <section class="panel">
@@ -35,7 +38,7 @@
                 <input type="number" name="majorDonors" min="0" step="1" placeholder="0" required>
               </label>
               <label class="field">
-                <span>منصة التبرعات (ر.س)</span>
+                <span>ديسق (ر.س)</span>
                 <input type="number" name="donationPlatform" min="0" step="1" placeholder="0" required>
               </label>
               <label class="field">
@@ -77,7 +80,7 @@
 
             <label class="field">
               <span>التاريخ</span>
-              <input type="date" name="date" value="<%= new Date().toISOString().slice(0,10) %>">
+              <input type="date" name="date" min="<%= weekStartInput %>" max="<%= weekEndInput %>" value="<%= todayInput %>">
             </label>
             <label class="field field-full">
               <span>ملاحظات (اختياري)</span>
@@ -93,8 +96,8 @@
 
       <section class="panel">
         <div class="panel-head">
-          <h3>آخر الإدخالات</h3>
-          <span class="muted">آخر 10 إدخالات</span>
+          <h3>إدخالات الأسبوع الحالي</h3>
+          <span class="muted"><%= weekLabel %></span>
         </div>
         <div class="panel-body">
           <% if (!recent.length) { %>

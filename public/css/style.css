@@ -517,6 +517,7 @@ h1, h2, h3, h4 { margin: 0; font-weight: 700; color: var(--navy-900); }
   transition: background var(--t-fast), border-color var(--t-fast), transform var(--t-fast);
 }
 .task-item:hover { border-color: var(--border-strong); }
+.task-item.is-readonly { grid-template-columns: auto 1fr; }
 
 .task-check {
   width: 26px; height: 26px;
@@ -529,6 +530,7 @@ h1, h2, h3, h4 { margin: 0; font-weight: 700; color: var(--navy-900); }
   flex-shrink: 0;
 }
 .task-check svg { width: 14px; height: 14px; transition: opacity var(--t-fast); }
+.task-check-readonly { cursor: default; pointer-events: none; }
 
 .task-item.is-done .task-check {
   background: var(--status-done);
@@ -568,6 +570,7 @@ h1, h2, h3, h4 { margin: 0; font-weight: 700; color: var(--navy-900); }
 .task-pending { color: #92400e; background: var(--media-soft) !important; border-color: #fde68a !important; }
 .task-late    { color: #991b1b; background: #fee2e2 !important; border-color: #fecaca !important; }
 .task-done-at { color: #065f46; background: var(--financial-soft) !important; border-color: #a7f3d0 !important; }
+.task-owner   { color: #1d4ed8; background: #dbeafe !important; border-color: #bfdbfe !important; }
 
 .task-delete button {
   background: transparent;

@@ -52,7 +52,7 @@
     revenueChart = new Chart(ctx, {
       type: 'doughnut',
       data: {
-        labels: ['كبار الداعمين', 'منصة التبرعات', 'كشك التبرعات'],
+        labels: ['كبار الداعمين', 'ديسق', 'كشك التبرعات'],
         datasets: [{
           data: [stats.revenue.majorDonors, stats.revenue.donationPlatform, stats.revenue.donationKiosk],
           backgroundColor: ['#10b981', '#34d399', '#6ee7b7'],
