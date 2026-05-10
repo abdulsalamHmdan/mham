@@ -5,8 +5,10 @@ const designSchema = new mongoose.Schema({
   title: { type: String, required: true, trim: true },
   imagePath: { type: String, default: '' },
   imageKey: { type: String, default: '' },
-  imageStorage: { type: String, enum: ['local', 's3'], default: 'local' },
+  imageStorage: { type: String, enum: ['r2', 's3', 'local'], default: 'r2' },
   imageOriginalName: { type: String, default: '' },
+  mediaType: { type: String, enum: ['image', 'video', 'pdf'], default: 'image' },
+  mimetype: { type: String, default: '' },
   note: { type: String, default: '' },
   date: { type: Date, default: Date.now },
   addedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }

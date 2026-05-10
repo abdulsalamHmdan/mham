@@ -7,17 +7,16 @@ const Design = require('../models/Design');
 const Publication = require('../models/Publication');
 const Visit = require('../models/Visit');
 const { currentWeekDateFilter, getCurrentWeekRange, formatDateInput, formatWeekLabel } = require('../utils/week');
-const { getDisqRevenueAmount } = require('../services/disqRevenue');
-const { saveImage } = require('../services/imageStorage');
+const { saveFile, getMediaType } = require('../services/imageStorage');
 
 router.use(requireRole('employee'));
 
 const upload = multer({
   storage: multer.memoryStorage(),
   fileFilter: (req, file, cb) => {
-    cb(null, file.mimetype.startsWith('image/'));
+    cb(null, Boolean(getMediaType(file.mimetype)));
   },
-  limits: { fileSize: 5 * 1024 * 1024 }
+  limits: { fileSize: 50 * 1024 * 1024 }
 });
 
 const MODELS = {
@@ -34,106 +33,174 @@ const DEPT_LABELS = {
   followup: 'المتابعة'
 };
 
+const VALID_SECTIONS = Object.keys(MODELS);
+
 router.get('/', async (req, res, next) => {
   try {
-    const dept = req.session.user.department;
-    const Model = MODELS[dept];
+    const section = VALID_SECTIONS.includes(req.query.section) ? req.query.section : null;
     const weekRange = getCurrentWeekRange();
-    const recent = await Model.find({
-      addedBy: req.session.user.id,
-      ...currentWeekDateFilter()
-    }).sort({ date: -1, createdAt: -1 }).limit(10).lean();
-    const disqRevenue = dept === 'financial' ? await getDisqRevenueAmount() : 0;
+
+    let recent = [];
+    if (section) {
+      const Model = MODELS[section];
+      recent = await Model.find({
+        addedBy: req.session.user.id,
+        ...currentWeekDateFilter()
+      }).sort({ date: -1, createdAt: -1 }).limit(10).lean();
+    }
+
     res.render('employee', {
-      title: `لوحة قسم ${DEPT_LABELS[dept]}`,
-      department: dept,
-      departmentLabel: DEPT_LABELS[dept],
+      title: section ? `إضافة بيانات — ${DEPT_LABELS[section]}` : 'إدخال البيانات',
+      section,
+      sections: VALID_SECTIONS.map(key => ({ key, label: DEPT_LABELS[key] })),
+      departmentLabel: section ? DEPT_LABELS[section] : '',
       recent,
-      financialEntry: dept === 'financial' ? (recent[0] || null) : null,
-      disqRevenue,
       weekLabel: formatWeekLabel(weekRange),
       weekStartInput: formatDateInput(weekRange.start),
       weekEndInput: formatDateInput(new Date(weekRange.end.getTime() - 1)),
       todayInput: formatDateInput(new Date()),
       success: req.query.success === '1',
-      outsideWeek: req.query.outsideWeek === '1'
+      outsideWeek: req.query.outsideWeek === '1',
+      uploadError: req.query.uploadError || ''
     });
   } catch (err) { next(err); }
 });
 
-router.post('/submit', upload.single('image'), async (req, res, next) => {
+function handleUpload(req, res, next) {
+  const handler = upload.fields([
+    { name: 'image', maxCount: 1 },
+    { name: 'evidenceFile', maxCount: 1 }
+  ]);
+  handler(req, res, (err) => {
+    if (err) {
+      const section = req.body && req.body.department ? req.body.department : 'media';
+      const code = err.code === 'LIMIT_FILE_SIZE' ? 'tooLarge' : 'badFile';
+      return res.redirect(`/employee?section=${section}&uploadError=${code}`);
+    }
+    next();
+  });
+}
+
+async function buildEvidence(req, section) {
+  const type = req.body.evidenceType;
+  if (type === 'text') {
+    return { evidenceType: 'text', evidenceText: req.body.evidenceText || '' };
+  }
+  if (type === 'media') {
+    const file = req.files && req.files.evidenceFile && req.files.evidenceFile[0];
+    if (!file) return { _error: 'noEvidenceFile' };
+    let saved;
+    try { saved = await saveFile(file); }
+    catch (e) { console.error('R2 evidence upload failed:', e); return { _error: 'storage' }; }
+    return {
+      evidenceType: 'media',
+      evidencePath: saved.url,
+      evidenceKey: saved.key,
+      evidenceStorage: saved.storage,
+      evidenceMediaType: saved.mediaType,
+      evidenceMimetype: saved.mimetype,
+      evidenceOriginalName: file.originalname
+    };
+  }
+  return {};
+}
+
+router.post('/submit', handleUpload, async (req, res, next) => {
   try {
-    const dept = req.session.user.department;
+    const section = VALID_SECTIONS.includes(req.body.department) ? req.body.department : null;
+    if (!section) return res.redirect('/employee');
+
     const userId = req.session.user.id;
     const weekRange = getCurrentWeekRange();
-    const entryDate = dept === 'financial'
-      ? weekRange.start
-      : (req.body.date ? new Date(req.body.date) : new Date());
+    const entryDate = req.body.date ? new Date(req.body.date) : new Date();
     if (entryDate < weekRange.start || entryDate >= weekRange.end) {
-      return res.redirect('/employee?outsideWeek=1');
+      return res.redirect(`/employee?section=${section}&outsideWeek=1`);
     }
-    let doc;
 
-    if (dept === 'financial') {
-      doc = await Revenue.findOneAndUpdate(
-        {
-          addedBy: userId,
-          date: { $gte: weekRange.start, $lt: weekRange.end }
-        },
-        {
-          $set: {
-            majorDonors: Number(req.body.majorDonors) || 0,
-            donationPlatform: 0,
-            donationKiosk: Number(req.body.donationKiosk) || 0,
-            grantOrganizations: Number(req.body.grantOrganizations) || 0,
-            governmentSupport: Number(req.body.governmentSupport) || 0,
-            note: req.body.note || '',
-            date: entryDate,
-            addedBy: userId
-          }
-        },
-        { new: true, upsert: true, setDefaultsOnInsert: true }
-      );
-    } else if (dept === 'media') {
-      if (!req.file || !req.body.title) {
-        return res.redirect('/employee');
+    if (section === 'financial') {
+      const REVENUE_FIELDS = ['majorDonors', 'donationPlatform', 'donationKiosk', 'grantOrganizations', 'governmentSupport'];
+      const revenueType = REVENUE_FIELDS.includes(req.body.revenueType) ? req.body.revenueType : null;
+      const amount = Number(req.body.amount) || 0;
+      if (!revenueType || amount <= 0) {
+        return res.redirect(`/employee?section=${section}`);
       }
-      const image = await saveImage(req.file);
-
-      doc = await Design.create({
+      const evidence = await buildEvidence(req, section);
+      if (evidence._error) return res.redirect(`/employee?section=${section}&uploadError=${evidence._error}`);
+      const doc = {
+        majorDonors: 0,
+        donationPlatform: 0,
+        donationKiosk: 0,
+        grantOrganizations: 0,
+        governmentSupport: 0,
+        date: entryDate,
+        addedBy: userId,
+        ...evidence
+      };
+      doc[revenueType] = amount;
+      await Revenue.create(doc);
+    } else if (section === 'media') {
+      const file = req.files && req.files.image && req.files.image[0];
+      if (!file) {
+        return res.redirect(`/employee?section=${section}&uploadError=noFile`);
+      }
+      if (!req.body.title) {
+        return res.redirect(`/employee?section=${section}&uploadError=noTitle`);
+      }
+      let saved;
+      try {
+        saved = await saveFile(file);
+      } catch (e) {
+        console.error('R2 upload failed:', e);
+        return res.redirect(`/employee?section=${section}&uploadError=storage`);
+      }
+      await Design.create({
         count: 1,
         title: req.body.title.trim(),
-        imagePath: image.url,
-        imageKey: image.key,
-        imageStorage: image.storage,
-        imageOriginalName: req.file.originalname,
+        imagePath: saved.url,
+        imageKey: saved.key,
+        imageStorage: saved.storage,
+        imageOriginalName: file.originalname,
+        mediaType: saved.mediaType,
+        mimetype: saved.mimetype,
         note: req.body.note || '',
         date: entryDate,
         addedBy: userId
       });
-    } else if (dept === 'content') {
-      doc = await Publication.create({
+    } else if (section === 'content') {
+      const evidence = await buildEvidence(req, section);
+      if (evidence._error) return res.redirect(`/employee?section=${section}&uploadError=${evidence._error}`);
+      await Publication.create({
         count: Number(req.body.count) || 0,
         platform: req.body.platform || '',
-        note: req.body.note || '',
         date: entryDate,
-        addedBy: userId
+        addedBy: userId,
+        ...evidence
       });
-    } else if (dept === 'followup') {
-      doc = await Visit.create({
-        associationToExternal: Number(req.body.associationToExternal) || 0,
-        externalToAssociation: Number(req.body.externalToAssociation) || 0,
-        websiteVisits: Number(req.body.websiteVisits) || 0,
-        note: req.body.note || '',
+    } else if (section === 'followup') {
+      const VISIT_FIELDS = ['associationToExternal', 'externalToAssociation', 'websiteVisits'];
+      const visitType = VISIT_FIELDS.includes(req.body.visitType) ? req.body.visitType : null;
+      const visitCount = Number(req.body.visitCount) || 0;
+      if (!visitType || visitCount <= 0) {
+        return res.redirect(`/employee?section=${section}`);
+      }
+      const evidence = await buildEvidence(req, section);
+      if (evidence._error) return res.redirect(`/employee?section=${section}&uploadError=${evidence._error}`);
+      const doc = {
+        associationToExternal: 0,
+        externalToAssociation: 0,
+        websiteVisits: 0,
         date: entryDate,
-        addedBy: userId
-      });
+        addedBy: userId,
+        ...evidence
+      };
+      doc[visitType] = visitCount;
+      await Visit.create(doc);
     }
 
     const io = req.app.get('io');
-    io.emit('data:updated', { department: dept });
+    io.emit('data:updated', { department: section });
 
-    res.redirect('/employee?success=1');
+    res.redirect(`/employee?section=${section}&success=1`);
   } catch (err) { next(err); }
 });
 

@@ -11,163 +11,245 @@
     <main class="main">
       <header class="page-header">
         <div>
-          <h1 class="page-title">قسم <%= departmentLabel %></h1>
-          <p class="page-sub">متابعة أسبوعية <%= weekLabel %> — مرحباً <%= user.name %></p>
+          <h1 class="page-title">إدخال البيانات</h1>
+          <p class="page-sub">
+            <% if (section) { %>
+              قسم <%= departmentLabel %> — <%= weekLabel %> — مرحباً <%= user.name %>
+            <% } else { %>
+              اختر القسم الذي تريد إضافة بياناته — مرحباً <%= user.name %>
+            <% } %>
+          </p>
         </div>
-        <span class="dept-badge dept-<%= department %>"><%= departmentLabel %></span>
+        <% if (section) { %>
+          <a href="/employee" class="btn btn-secondary">تغيير القسم</a>
+        <% } %>
       </header>
 
       <% if (success) { %>
-        <div class="alert alert-success">تم حفظ البيانات بنجاح.</div>
+        <div class="alert alert-success">تمت إضافة البيانات بنجاح.</div>
       <% } %>
       <% if (outsideWeek) { %>
         <div class="alert alert-error">لا يمكن حفظ إدخال خارج الأسبوع الحالي.</div>
       <% } %>
+      <% if (uploadError) {
+           const ERR_MSG = {
+             tooLarge: 'حجم الملف يتجاوز 50 ميجا.',
+             badFile: 'نوع الملف غير مدعوم. الأنواع المسموحة: صورة، فيديو، PDF.',
+             noFile: 'لم يتم اختيار ملف.',
+             noTitle: 'يجب إدخال عنوان التصميم.',
+             storage: 'فشل رفع الملف إلى التخزين السحابي. تحقق من إعدادات R2 في المتغيرات (S3_BUCKET, S3_ACCESS_KEY_ID, S3_SECRET_ACCESS_KEY, S3_ENDPOINT, S3_PUBLIC_BASE_URL).'
+           }; %>
+        <div class="alert alert-error"><%= ERR_MSG[uploadError] || 'حدث خطأ أثناء رفع الملف.' %></div>
+      <% } %>
 
-      <section class="panel">
-        <div class="panel-head">
-          <h3><%= department === 'financial' && financialEntry ? 'تعديل بيانات الأسبوع' : 'تعبئة البيانات' %></h3>
-          <span class="muted"><%= department === 'financial' ? 'يتم حفظ سجل واحد فقط لكل أسبوع' : 'جميع الحقول الرقمية تقبل أرقاماً صحيحة فقط' %></span>
-        </div>
-        <div class="panel-body">
-          <form method="POST" action="/employee/submit" class="form-grid" enctype="<%= department === 'media' ? 'multipart/form-data' : 'application/x-www-form-urlencoded' %>">
+      <% if (!section) { %>
+        <section class="kpi-grid">
+          <% sections.forEach(function(s) { %>
+            <a class="kpi-card kpi-<%= s.key === 'followup' ? 'visits' : s.key %>" href="/employee?section=<%= s.key %>">
+              <div class="kpi-icon">
+                <% if (s.key === 'financial') { %>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12V7H5a2 2 0 010-4h14v4"/><path d="M3 5v14a2 2 0 002 2h16v-5"/><path d="M18 12a2 2 0 100 4h3v-4z"/></svg>
+                <% } else if (s.key === 'media') { %>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 19l7-7 3 3-7 7-3-3z"/><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/><circle cx="11" cy="11" r="2"/></svg>
+                <% } else if (s.key === 'content') { %>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+                <% } else { %>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                <% } %>
+              </div>
+              <div class="kpi-body">
+                <div class="kpi-label">إضافة بيانات</div>
+                <div class="kpi-value" style="font-size:20px;"><%= s.label %></div>
+                <div class="kpi-foot">انقر للبدء</div>
+              </div>
+              <div class="kpi-chevron">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 6 15 12 9 18"/></svg>
+              </div>
+            </a>
+          <% }) %>
+        </section>
+      <% } else { %>
+        <section class="panel">
+          <div class="panel-head">
+            <h3>إضافة بيانات — <%= departmentLabel %></h3>
+            <span class="dept-badge dept-<%= section %>"><%= departmentLabel %></span>
+          </div>
+          <div class="panel-body">
+            <form method="POST" action="/employee/submit" class="form-grid" enctype="multipart/form-data">
+              <input type="hidden" name="department" value="<%= section %>">
 
-            <% if (department === 'financial') { %>
-              <label class="field">
-                <span>كبار الداعمين (ر.س)</span>
-                <input type="number" name="majorDonors" min="0" step="1" placeholder="0" value="<%= financialEntry ? financialEntry.majorDonors || 0 : '' %>" required>
-              </label>
-              <label class="field">
-                <span>كشك التبرعات (ر.س)</span>
-                <input type="number" name="donationKiosk" min="0" step="1" placeholder="0" value="<%= financialEntry ? financialEntry.donationKiosk || 0 : '' %>" required>
-              </label>
-              <label class="field">
-                <span>الجهات المانحة (ر.س)</span>
-                <input type="number" name="grantOrganizations" min="0" step="1" placeholder="0" value="<%= financialEntry ? financialEntry.grantOrganizations || 0 : '' %>" required>
-              </label>
-              <label class="field">
-                <span>الدعم الحكومي (ر.س)</span>
-                <input type="number" name="governmentSupport" min="0" step="1" placeholder="0" value="<%= financialEntry ? financialEntry.governmentSupport || 0 : '' %>" required>
-              </label>
-              <label class="field">
-                <span>ديسق (من API)</span>
-                <input type="number" value="<%= disqRevenue %>" readonly>
-              </label>
-            <% } else if (department === 'media') { %>
-              <label class="field field-full">
-                <span>ملف التصميم</span>
-                <input type="file" name="image" accept="image/*" required>
-              </label>
-              <label class="field">
-                <span>عنوان التصميم</span>
-                <input type="text" name="title" placeholder="مثال: حملة شهر رمضان" required>
-              </label>
-            <% } else if (department === 'content') { %>
-              <label class="field">
-                <span>عدد المنشورات</span>
-                <input type="number" name="count" min="0" step="1" placeholder="0" required>
-              </label>
-              <label class="field">
-                <span>المنصة (اختياري)</span>
-                <input type="text" name="platform" placeholder="مثال: تويتر، إنستجرام">
-              </label>
-            <% } else if (department === 'followup') { %>
-              <label class="field">
-                <span>زيارات من الجمعية لجهة خارجية</span>
-                <input type="number" name="associationToExternal" min="0" step="1" placeholder="0" required>
-              </label>
-              <label class="field">
-                <span>زيارات من جهة خارجية للجمعية</span>
-                <input type="number" name="externalToAssociation" min="0" step="1" placeholder="0" required>
-              </label>
-              <label class="field">
-                <span>زيارات الموقع الإلكتروني</span>
-                <input type="number" name="websiteVisits" min="0" step="1" placeholder="0" required>
-              </label>
-            <% } %>
+              <% if (section === 'financial') { %>
+                <label class="field">
+                  <span>نوع الإيراد</span>
+                  <select name="revenueType" required>
+                    <option value="majorDonors">كبار الداعمين</option>
+                    <option value="donationPlatform">ديسق</option>
+                    <option value="donationKiosk">كشك التبرعات</option>
+                    <option value="grantOrganizations">الجهات المانحة</option>
+                    <option value="governmentSupport">الدعم الحكومي</option>
+                  </select>
+                </label>
+                <label class="field">
+                  <span>المبلغ (ر.س)</span>
+                  <input type="number" name="amount" min="0" step="1" placeholder="0" required>
+                </label>
+              <% } else if (section === 'media') { %>
+                <label class="field field-full">
+                  <span>الملف (صورة / فيديو / PDF — حتى 50 ميجا)</span>
+                  <input type="file" name="image" accept="image/*,video/*,application/pdf" required>
+                </label>
+                <label class="field">
+                  <span>عنوان التصميم</span>
+                  <input type="text" name="title" placeholder="مثال: حملة شهر رمضان" required>
+                </label>
+              <% } else if (section === 'content') { %>
+                <label class="field">
+                  <span>عدد المنشورات</span>
+                  <input type="number" name="count" min="0" step="1" placeholder="0" required>
+                </label>
+                <label class="field">
+                  <span>المنصة (اختياري)</span>
+                  <input type="text" name="platform" placeholder="مثال: تويتر، إنستجرام">
+                </label>
+              <% } else if (section === 'followup') { %>
+                <label class="field">
+                  <span>نوع الزيارة</span>
+                  <select name="visitType" required>
+                    <option value="associationToExternal">زيارات من الجمعية لجهة خارجية</option>
+                    <option value="externalToAssociation">زيارات من جهة خارجية للجمعية</option>
+                    <option value="websiteVisits">زيارات الموقع الإلكتروني</option>
+                  </select>
+                </label>
+                <label class="field">
+                  <span>العدد</span>
+                  <input type="number" name="visitCount" min="0" step="1" placeholder="0" required>
+                </label>
+              <% } %>
 
-            <% if (department !== 'financial') { %>
               <label class="field">
                 <span>التاريخ</span>
                 <input type="date" name="date" min="<%= weekStartInput %>" max="<%= weekEndInput %>" value="<%= todayInput %>">
               </label>
-            <% } %>
-            <label class="field field-full">
-              <span>ملاحظات (اختياري)</span>
-              <textarea name="note" rows="2" placeholder="أي ملاحظات إضافية"><%= financialEntry ? financialEntry.note || '' : '' %></textarea>
-            </label>
 
-            <div class="form-actions">
-              <button type="submit" class="btn btn-primary"><%= department === 'financial' && financialEntry ? 'حفظ التعديل' : 'تحديث البيانات' %></button>
-            </div>
-          </form>
-        </div>
-      </section>
+              <% if (section === 'media') { %>
+                <label class="field field-full">
+                  <span>ملاحظات (اختياري)</span>
+                  <textarea name="note" rows="2" placeholder="أي ملاحظات إضافية"></textarea>
+                </label>
+              <% } else { %>
+                <label class="field field-full">
+                  <span>نوع الشواهد</span>
+                  <select name="evidenceType" data-evidence-type required>
+                    <option value="text">روابط ونص</option>
+                    <option value="media">وسائط (صورة / فيديو / PDF)</option>
+                  </select>
+                </label>
+                <label class="field field-full" data-evidence-pane="text">
+                  <span>الشواهد (روابط أو نص)</span>
+                  <textarea name="evidenceText" rows="3" placeholder="ألصق الروابط أو اكتب الشواهد هنا"></textarea>
+                </label>
+                <label class="field field-full" data-evidence-pane="media" style="display:none;">
+                  <span>ملف الشواهد (حتى 50 ميجا)</span>
+                  <input type="file" name="evidenceFile" accept="image/*,video/*,application/pdf" disabled>
+                </label>
+              <% } %>
 
-      <section class="panel">
-        <div class="panel-head">
-          <h3>إدخالات الأسبوع الحالي</h3>
-          <span class="muted"><%= weekLabel %></span>
-        </div>
-        <div class="panel-body">
-          <% if (!recent.length) { %>
-            <div class="empty">لا توجد إدخالات بعد.</div>
-          <% } else { %>
-            <table class="table">
-              <thead>
-                <tr>
-                  <th>التاريخ</th>
-                  <% if (department === 'financial') { %>
-                    <th>كبار الداعمين</th><th>ديسق</th><th>الكشك</th><th>الجهات المانحة</th><th>الدعم الحكومي</th><th>الإجمالي</th>
-                  <% } else if (department === 'media') { %>
-                    <th>التصميم</th><th>العنوان</th>
-                  <% } else if (department === 'content') { %>
-                    <th>عدد المنشورات</th><th>المنصة</th>
-                  <% } else if (department === 'followup') { %>
-                    <th>من الجمعية</th><th>للجمعية</th><th>الموقع</th><th>الإجمالي</th>
-                  <% } %>
-                  <th>الملاحظات</th>
-                </tr>
-              </thead>
-              <tbody>
-                <% recent.forEach(function(r) { %>
+              <div class="form-actions">
+                <button type="submit" class="btn btn-primary">إضافة البيانات</button>
+              </div>
+            </form>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-head">
+            <h3>إدخالاتك في الأسبوع الحالي</h3>
+            <span class="muted"><%= weekLabel %></span>
+          </div>
+          <div class="panel-body">
+            <% if (!recent.length) { %>
+              <div class="empty">لا توجد إدخالات بعد.</div>
+            <% } else { %>
+              <table class="table">
+                <thead>
                   <tr>
-                    <td><%= new Date(r.date).toLocaleDateString('ar-SA') %></td>
-                    <% if (department === 'financial') {
-                         const total = (r.majorDonors||0)+disqRevenue+(r.donationKiosk||0)+(r.grantOrganizations||0)+(r.governmentSupport||0); %>
-                      <td><%= (r.majorDonors||0).toLocaleString('ar-SA') %></td>
-                      <td><%= disqRevenue.toLocaleString('ar-SA') %></td>
-                      <td><%= (r.donationKiosk||0).toLocaleString('ar-SA') %></td>
-                      <td><%= (r.grantOrganizations||0).toLocaleString('ar-SA') %></td>
-                      <td><%= (r.governmentSupport||0).toLocaleString('ar-SA') %></td>
-                      <td><strong><%= total.toLocaleString('ar-SA') %></strong></td>
-                    <% } else if (department === 'media') { %>
-                      <td>
-                        <% if (r.imagePath) { %>
-                          <img class="table-thumb" src="<%= r.imagePath %>" alt="<%= r.title %>">
-                        <% } else { %>
-                          —
-                        <% } %>
-                      </td>
-                      <td><%= r.title || '—' %></td>
-                    <% } else if (department === 'content') { %>
-                      <td><%= (r.count||0).toLocaleString('ar-SA') %></td>
-                      <td><%= r.platform || '—' %></td>
-                    <% } else if (department === 'followup') {
-                         const total = (r.associationToExternal||0)+(r.externalToAssociation||0)+(r.websiteVisits||0); %>
-                      <td><%= (r.associationToExternal||0).toLocaleString('ar-SA') %></td>
-                      <td><%= (r.externalToAssociation||0).toLocaleString('ar-SA') %></td>
-                      <td><%= (r.websiteVisits||0).toLocaleString('ar-SA') %></td>
-                      <td><strong><%= total.toLocaleString('ar-SA') %></strong></td>
+                    <th>التاريخ</th>
+                    <% if (section === 'financial') { %>
+                      <th>نوع الإيراد</th><th>المبلغ</th>
+                    <% } else if (section === 'media') { %>
+                      <th>المعاينة</th><th>النوع</th><th>العنوان</th>
+                    <% } else if (section === 'content') { %>
+                      <th>عدد المنشورات</th><th>المنصة</th>
+                    <% } else if (section === 'followup') { %>
+                      <th>نوع الزيارة</th><th>العدد</th>
                     <% } %>
-                    <td class="muted"><%= r.note || '—' %></td>
+                    <th><%= section === 'media' ? 'الملاحظات' : 'الشواهد' %></th>
                   </tr>
-                <% }) %>
-              </tbody>
-            </table>
-          <% } %>
-        </div>
-      </section>
+                </thead>
+                <tbody>
+                  <% recent.forEach(function(r) { %>
+                    <tr>
+                      <td><%= new Date(r.date).toLocaleDateString('ar-SA') %></td>
+                      <% if (section === 'financial') {
+                           const REV_LABELS = { majorDonors:'كبار الداعمين', donationPlatform:'ديسق', donationKiosk:'كشك التبرعات', grantOrganizations:'الجهات المانحة', governmentSupport:'الدعم الحكومي' };
+                           const fields = ['majorDonors','donationPlatform','donationKiosk','grantOrganizations','governmentSupport'];
+                           const activeField = fields.find(f => (r[f]||0) > 0) || 'majorDonors';
+                           const amount = r[activeField] || 0; %>
+                        <td><%= REV_LABELS[activeField] %></td>
+                        <td><strong><%= amount.toLocaleString('ar-SA') %></strong></td>
+                      <% } else if (section === 'media') {
+                           const mt = r.mediaType || 'image';
+                           const TYPE_LABEL = { image: 'صورة', video: 'فيديو', pdf: 'PDF' }; %>
+                        <td>
+                          <% if (!r.imagePath) { %>
+                            —
+                          <% } else if (mt === 'video') { %>
+                            <video class="table-thumb" src="<%= r.imagePath %>" muted playsinline preload="metadata"></video>
+                          <% } else if (mt === 'pdf') { %>
+                            <a href="<%= r.imagePath %>" target="_blank" rel="noopener" class="muted">📄 فتح الملف</a>
+                          <% } else { %>
+                            <img class="table-thumb" src="<%= r.imagePath %>" alt="<%= r.title %>">
+                          <% } %>
+                        </td>
+                        <td><%= TYPE_LABEL[mt] || '—' %></td>
+                        <td><%= r.title || '—' %></td>
+                      <% } else if (section === 'content') { %>
+                        <td><%= (r.count||0).toLocaleString('ar-SA') %></td>
+                        <td><%= r.platform || '—' %></td>
+                      <% } else if (section === 'followup') {
+                           const VISIT_LABELS = { associationToExternal:'من الجمعية لجهة خارجية', externalToAssociation:'من جهة خارجية للجمعية', websiteVisits:'الموقع الإلكتروني' };
+                           const vfields = ['associationToExternal','externalToAssociation','websiteVisits'];
+                           const activeV = vfields.find(f => (r[f]||0) > 0) || 'associationToExternal';
+                           const vcount = r[activeV] || 0; %>
+                        <td><%= VISIT_LABELS[activeV] %></td>
+                        <td><strong><%= vcount.toLocaleString('ar-SA') %></strong></td>
+                      <% } %>
+                      <% if (section === 'media') { %>
+                        <td class="muted"><%= r.note || '—' %></td>
+                      <% } else if (r.evidenceType === 'media' && r.evidencePath) {
+                           const emt = r.evidenceMediaType || 'image'; %>
+                        <td>
+                          <% if (emt === 'video') { %>
+                            <video class="table-thumb" src="<%= r.evidencePath %>" muted playsinline preload="metadata"></video>
+                          <% } else if (emt === 'pdf') { %>
+                            <a href="<%= r.evidencePath %>" target="_blank" rel="noopener">📄 PDF</a>
+                          <% } else { %>
+                            <a href="<%= r.evidencePath %>" target="_blank" rel="noopener"><img class="table-thumb" src="<%= r.evidencePath %>" alt="شاهد"></a>
+                          <% } %>
+                        </td>
+                      <% } else if (r.evidenceType === 'text' && r.evidenceText) { %>
+                        <td class="muted" style="white-space: pre-wrap; max-width: 300px;"><%= r.evidenceText %></td>
+                      <% } else { %>
+                        <td class="muted">—</td>
+                      <% } %>
+                    </tr>
+                  <% }) %>
+                </tbody>
+              </table>
+            <% } %>
+          </div>
+        </section>
+      <% } %>
     </main>
   </div>
   <script src="/js/employee.js"></script>

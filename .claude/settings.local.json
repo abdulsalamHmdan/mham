@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(node -c \"C:\\\\Users\\\\asus\\\\Desktop\\\\mham\\\\services\\\\imageStorage.js\")",
+      "Bash(node -c \"C:\\\\Users\\\\asus\\\\Desktop\\\\mham\\\\models\\\\Design.js\")",
+      "Bash(node -c \"C:\\\\Users\\\\asus\\\\Desktop\\\\mham\\\\routes\\\\employee.js\")",
+      "Bash(node -c \"C:\\\\Users\\\\asus\\\\Desktop\\\\mham\\\\models\\\\Revenue.js\")",
+      "Bash(node -c \"C:\\\\Users\\\\asus\\\\Desktop\\\\mham\\\\models\\\\Publication.js\")",
+      "Bash(node -c \"C:\\\\Users\\\\asus\\\\Desktop\\\\mham\\\\models\\\\Visit.js\")"
+    ]
+  }
+}

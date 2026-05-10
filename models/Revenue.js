@@ -7,6 +7,14 @@ const revenueSchema = new mongoose.Schema({
   grantOrganizations: { type: Number, default: 0, min: 0 },
   governmentSupport: { type: Number, default: 0, min: 0 },
   note: { type: String, default: '' },
+  evidenceType: { type: String, default: '' },
+  evidenceText: { type: String, default: '' },
+  evidencePath: { type: String, default: '' },
+  evidenceKey: { type: String, default: '' },
+  evidenceStorage: { type: String, default: '' },
+  evidenceMediaType: { type: String, default: '' },
+  evidenceMimetype: { type: String, default: '' },
+  evidenceOriginalName: { type: String, default: '' },
   date: { type: Date, default: Date.now },
   addedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }
 }, { timestamps: true });
