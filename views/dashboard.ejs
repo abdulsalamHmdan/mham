@@ -5,11 +5,11 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
   <script src="/socket.io/socket.io.js"></script>
 </head>
-<body class="exec-body" data-theme="light">
+<body class="exec-body cmd-body" data-theme="light">
   <div class="layout">
     <%- include('partials/sidebar') %>
 
-    <main class="main exec-main">
+    <main class="main cmd-main">
       <!-- Animated aurora background -->
       <div class="aurora" aria-hidden="true">
         <span class="aurora-blob a1"></span>
@@ -18,33 +18,33 @@
         <span class="aurora-grid"></span>
       </div>
 
-      <!-- HERO -->
-      <header class="exec-hero" data-reveal>
-        <div class="exec-hero-left">
-          <div class="hero-greet">
+      <!-- COMMAND HEADER -->
+      <header class="cmd-header" data-reveal>
+        <div class="cmd-header-l">
+          <div class="cmd-greet">
             <span class="hero-wave" aria-hidden="true">👋</span>
             <span data-greet>أهلاً</span>،
             <strong><%= user.name %></strong>
           </div>
-          <h1 class="hero-title">
-            <span class="hero-gradient-text">لوحة القيادة التنفيذية</span>
+          <h1 class="cmd-title">
+            <span class="hero-gradient-text">مركز القيادة التنفيذي</span>
           </h1>
-          <p class="hero-sub">
+          <p class="cmd-meta">
             <span class="live-dot" aria-hidden="true"><span></span></span>
-            <span>متابعة لحظية</span>
+            <span>مباشر</span>
             <span class="hero-divider">•</span>
             <span data-clock>--:--:--</span>
             <span class="hero-divider">•</span>
             <span><%= weekLabel %></span>
+            <span class="hero-divider">•</span>
+            <span><strong data-stat="activity.count"><%= stats.activity.length %></strong> حدث هذا الأسبوع</span>
           </p>
         </div>
 
-        <div class="exec-hero-right">
-          <div class="period-pills" role="tablist" aria-label="الفترة">
-            <button class="period-tab active" data-period="all" role="tab" aria-selected="true">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
-              هذا الأسبوع
-            </button>
+        <div class="cmd-header-r">
+          <div class="search-box">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+            <input type="search" data-cmd-search placeholder="ابحث في كل التقارير…" />
           </div>
           <button class="theme-toggle" data-theme-toggle aria-label="تبديل وضع العرض" type="button">
             <svg class="ic-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
@@ -53,275 +53,365 @@
         </div>
       </header>
 
-      <!-- KPI cards -->
-      <section class="kpi-grid kpi-grid-x" data-reveal>
-        <article class="kpi-card kpi-x kpi-financial" data-expand="financial-detail" data-tilt>
-          <div class="kpi-glow"></div>
-          <div class="kpi-top">
-            <div class="kpi-icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12V7H5a2 2 0 010-4h14v4"/><path d="M3 5v14a2 2 0 002 2h16v-5"/><path d="M18 12a2 2 0 100 4h3v-4z"/></svg>
-            </div>
-            <div class="kpi-trend up" aria-hidden="true">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 17 9 11 13 15 21 7"/><polyline points="14 7 21 7 21 14"/></svg>
-            </div>
-          </div>
-          <div class="kpi-label">إجمالي الإيرادات</div>
-          <div class="kpi-value" data-stat="revenue.total" data-counter><%= stats.revenue.total.toLocaleString('ar-SA') %></div>
-          <div class="kpi-foot">
-            <span>ريال سعودي</span>
-            <span class="kpi-pulse" aria-hidden="true"></span>
-          </div>
-          <canvas class="kpi-spark" data-spark="financial" height="40"></canvas>
-          <div class="kpi-hint">انقر للتفاصيل ↓</div>
-        </article>
+      <!-- PULSE STRIP — 4 connected segments. Click switches workspace -->
+      <nav class="pulse-strip" data-reveal aria-label="التقارير">
+        <button class="pulse-seg active" data-report="overview">
+          <span class="ps-ic">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>
+          </span>
+          <span class="ps-text">
+            <span class="ps-label">نظرة شاملة</span>
+            <span class="ps-meta">كل التقارير</span>
+          </span>
+        </button>
 
-        <article class="kpi-card kpi-x kpi-media" data-expand="media-detail" data-tilt>
-          <div class="kpi-glow"></div>
-          <div class="kpi-top">
-            <div class="kpi-icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 19a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h14a2 2 0 012 2z"/><circle cx="8.5" cy="9.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-            </div>
-            <div class="kpi-trend up" aria-hidden="true">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 17 9 11 13 15 21 7"/><polyline points="14 7 21 7 21 14"/></svg>
-            </div>
-          </div>
-          <div class="kpi-label">عدد التصاميم</div>
-          <div class="kpi-value" data-stat="designs.total" data-counter><%= stats.designs.total.toLocaleString('ar-SA') %></div>
-          <div class="kpi-foot">
-            <span>تصميم منجز</span>
-            <span class="kpi-pulse" aria-hidden="true"></span>
-          </div>
-          <canvas class="kpi-spark" data-spark="media" height="40"></canvas>
-          <div class="kpi-hint">انقر للتفاصيل ↓</div>
-        </article>
+        <button class="pulse-seg seg-financial" data-report="revenue">
+          <span class="ps-ic">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12V7H5a2 2 0 010-4h14v4"/><path d="M3 5v14a2 2 0 002 2h16v-5"/><path d="M18 12a2 2 0 100 4h3v-4z"/></svg>
+          </span>
+          <span class="ps-text">
+            <span class="ps-label">الإيرادات</span>
+            <span class="ps-meta"><span data-stat="revenue.total"><%= stats.revenue.total.toLocaleString('ar-SA') %></span> ريال</span>
+          </span>
+          <span class="ps-count" data-list-count="revenue"><%= stats.revenue.items.length %></span>
+        </button>
 
-        <article class="kpi-card kpi-x kpi-content" data-expand="content-detail" data-tilt>
-          <div class="kpi-glow"></div>
-          <div class="kpi-top">
-            <div class="kpi-icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
-            </div>
-            <div class="kpi-trend up" aria-hidden="true">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 17 9 11 13 15 21 7"/><polyline points="14 7 21 7 21 14"/></svg>
-            </div>
-          </div>
-          <div class="kpi-label">عدد المنشورات</div>
-          <div class="kpi-value" data-stat="publications.total" data-counter><%= stats.publications.total.toLocaleString('ar-SA') %></div>
-          <div class="kpi-foot">
-            <span>منشور</span>
-            <span class="kpi-pulse" aria-hidden="true"></span>
-          </div>
-          <canvas class="kpi-spark" data-spark="content" height="40"></canvas>
-          <div class="kpi-hint">انقر للتفاصيل ↓</div>
-        </article>
+        <button class="pulse-seg seg-media" data-report="designs">
+          <span class="ps-ic">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 19a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h14a2 2 0 012 2z"/><circle cx="8.5" cy="9.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+          </span>
+          <span class="ps-text">
+            <span class="ps-label">التصاميم</span>
+            <span class="ps-meta"><span data-stat="designs.total"><%= stats.designs.total.toLocaleString('ar-SA') %></span> تصميم</span>
+          </span>
+          <span class="ps-count" data-list-count="designs"><%= stats.designs.items.length %></span>
+        </button>
 
-        <article class="kpi-card kpi-x kpi-visits" data-expand="visits-detail" data-tilt>
-          <div class="kpi-glow"></div>
-          <div class="kpi-top">
-            <div class="kpi-icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
-            </div>
-            <div class="kpi-trend up" aria-hidden="true">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 17 9 11 13 15 21 7"/><polyline points="14 7 21 7 21 14"/></svg>
-            </div>
-          </div>
-          <div class="kpi-label">عدد الزيارات</div>
-          <div class="kpi-value" data-stat="visits.total" data-counter><%= stats.visits.total.toLocaleString('ar-SA') %></div>
-          <div class="kpi-foot">
-            <span>زيارة</span>
-            <span class="kpi-pulse" aria-hidden="true"></span>
-          </div>
-          <canvas class="kpi-spark" data-spark="visits" height="40"></canvas>
-          <div class="kpi-hint">انقر للتفاصيل ↓</div>
-        </article>
-      </section>
+        <button class="pulse-seg seg-content" data-report="publications">
+          <span class="ps-ic">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+          </span>
+          <span class="ps-text">
+            <span class="ps-label">المنشورات</span>
+            <span class="ps-meta"><span data-stat="publications.total"><%= stats.publications.total.toLocaleString('ar-SA') %></span> منشور</span>
+          </span>
+          <span class="ps-count" data-list-count="publications"><%= stats.publications.items.length %></span>
+        </button>
 
-      <!-- Tasks circular gauge + summary -->
-      <section class="hero-summary" data-reveal>
-        <div class="ring-card">
-          <div class="ring-gauge" data-ring-gauge>
-            <svg viewBox="0 0 120 120">
-              <defs>
-                <linearGradient id="ringGrad" x1="0" y1="0" x2="1" y2="1">
-                  <stop offset="0%" stop-color="#10b981"/>
-                  <stop offset="100%" stop-color="#34d399"/>
-                </linearGradient>
-              </defs>
-              <circle class="ring-track" cx="60" cy="60" r="52"/>
-              <circle class="ring-fill" cx="60" cy="60" r="52" stroke="url(#ringGrad)"/>
-            </svg>
-            <div class="ring-center">
-              <div class="ring-value"><span data-stat="tasks.progress"><%= stats.tasks.progress %></span><i>%</i></div>
-              <div class="ring-caption">إنجاز المهام</div>
+        <button class="pulse-seg seg-visits" data-report="visits">
+          <span class="ps-ic">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          </span>
+          <span class="ps-text">
+            <span class="ps-label">الزيارات</span>
+            <span class="ps-meta"><span data-stat="visits.total"><%= stats.visits.total.toLocaleString('ar-SA') %></span> زيارة</span>
+          </span>
+          <span class="ps-count" data-list-count="visits"><%= stats.visits.items.length %></span>
+        </button>
+
+        <button class="pulse-seg seg-tasks" data-report="tasks">
+          <span class="ps-ic">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+          </span>
+          <span class="ps-text">
+            <span class="ps-label">المهام</span>
+            <span class="ps-meta"><span data-stat="tasks.done"><%= stats.tasks.done %></span>/<span data-stat="tasks.total"><%= stats.tasks.total %></span></span>
+          </span>
+          <span class="ps-count" data-list-count="tasks"><%= stats.tasks.total %></span>
+        </button>
+
+        <span class="pulse-indicator" data-pulse-indicator></span>
+      </nav>
+
+      <!-- WORKSPACE — morphs based on selected pulse-seg -->
+      <section class="workspace" data-reveal>
+
+        <!-- ============= OVERVIEW VIEW ============= -->
+        <div class="ws-view ws-overview active" data-view="overview">
+          <div class="ws-overview-grid">
+            <div class="ws-headline-card">
+              <div class="ws-hl-left">
+                <div class="ws-hl-eyebrow">إجمالي إيرادات الأسبوع</div>
+                <div class="ws-hl-num" data-stat="revenue.total"><%= stats.revenue.total.toLocaleString('ar-SA') %></div>
+                <div class="ws-hl-unit">ريال سعودي</div>
+              </div>
+              <div class="ws-hl-right">
+                <canvas id="overviewMixed" height="160"></canvas>
+              </div>
             </div>
-          </div>
-          <div class="ring-meta">
-            <h3>إنجاز المهام الفردية</h3>
-            <p>
-              <span data-stat="tasks.done"><%= stats.tasks.done %></span>
-              مهمة مكتملة من أصل
-              <span data-stat="tasks.total"><%= stats.tasks.total %></span>
-            </p>
-            <div class="ring-tags">
-              <span class="rt-done"><i></i> منجزة <strong data-stat="tasks.done"><%= stats.tasks.done %></strong></span>
-              <span class="rt-total"><i></i> الإجمالي <strong data-stat="tasks.total"><%= stats.tasks.total %></strong></span>
+
+            <div class="ws-tile tile-financial" data-jump="revenue">
+              <div class="tile-top">
+                <span class="tile-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12V7H5a2 2 0 010-4h14v4"/><path d="M3 5v14a2 2 0 002 2h16v-5"/><path d="M18 12a2 2 0 100 4h3v-4z"/></svg></span>
+                <span class="tile-arrow">→</span>
+              </div>
+              <div class="tile-num" data-stat="revenue.total"><%= stats.revenue.total.toLocaleString('ar-SA') %></div>
+              <div class="tile-label">إيرادات</div>
+              <div class="tile-foot"><span data-list-count="revenue"><%= stats.revenue.items.length %></span> سجل — اضغط للتعمّق</div>
+              <canvas class="tile-spark" data-spark="financial" height="36"></canvas>
             </div>
-            <!-- Hidden legacy progress for compatibility with applyStats -->
-            <div class="progress sr-only" aria-hidden="true">
-              <div class="progress-bar" style="width: <%= stats.tasks.progress %>%" data-stat="tasks.progress"><%= stats.tasks.progress %>%</div>
+
+            <div class="ws-tile tile-media" data-jump="designs">
+              <div class="tile-top">
+                <span class="tile-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 19a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h14a2 2 0 012 2z"/><circle cx="8.5" cy="9.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></span>
+                <span class="tile-arrow">→</span>
+              </div>
+              <div class="tile-num" data-stat="designs.total"><%= stats.designs.total.toLocaleString('ar-SA') %></div>
+              <div class="tile-label">تصاميم</div>
+              <div class="tile-foot"><span data-list-count="designs"><%= stats.designs.items.length %></span> سجل — اضغط للتعمّق</div>
+              <canvas class="tile-spark" data-spark="media" height="36"></canvas>
+            </div>
+
+            <div class="ws-tile tile-content" data-jump="publications">
+              <div class="tile-top">
+                <span class="tile-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg></span>
+                <span class="tile-arrow">→</span>
+              </div>
+              <div class="tile-num" data-stat="publications.total"><%= stats.publications.total.toLocaleString('ar-SA') %></div>
+              <div class="tile-label">منشورات</div>
+              <div class="tile-foot"><span data-list-count="publications"><%= stats.publications.items.length %></span> سجل — اضغط للتعمّق</div>
+              <canvas class="tile-spark" data-spark="content" height="36"></canvas>
+            </div>
+
+            <div class="ws-tile tile-visits" data-jump="visits">
+              <div class="tile-top">
+                <span class="tile-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg></span>
+                <span class="tile-arrow">→</span>
+              </div>
+              <div class="tile-num" data-stat="visits.total"><%= stats.visits.total.toLocaleString('ar-SA') %></div>
+              <div class="tile-label">زيارات</div>
+              <div class="tile-foot"><span data-list-count="visits"><%= stats.visits.items.length %></span> سجل — اضغط للتعمّق</div>
+              <canvas class="tile-spark" data-spark="visits" height="36"></canvas>
+            </div>
+
+            <div class="ws-tile tile-tasks" data-jump="tasks">
+              <div class="tile-top">
+                <span class="tile-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg></span>
+                <span class="tile-arrow">→</span>
+              </div>
+              <div class="tile-ring">
+                <svg viewBox="0 0 80 80">
+                  <defs>
+                    <linearGradient id="tileRing" x1="0" y1="0" x2="1" y2="1">
+                      <stop offset="0%" stop-color="#10b981"/>
+                      <stop offset="100%" stop-color="#34d399"/>
+                    </linearGradient>
+                  </defs>
+                  <circle cx="40" cy="40" r="32" fill="none" stroke="rgba(15,31,61,0.08)" stroke-width="8"/>
+                  <circle class="tile-ring-fill" cx="40" cy="40" r="32" fill="none" stroke="url(#tileRing)" stroke-width="8" stroke-linecap="round" stroke-dasharray="201" stroke-dashoffset="201"/>
+                </svg>
+                <div class="tile-ring-text"><span data-stat="tasks.progress"><%= stats.tasks.progress %></span><i>%</i></div>
+              </div>
+              <div class="tile-label">إنجاز المهام</div>
+              <div class="tile-foot"><span data-stat="tasks.done"><%= stats.tasks.done %></span> من <span data-stat="tasks.total"><%= stats.tasks.total %></span> — اضغط للتعمّق</div>
             </div>
           </div>
         </div>
 
-        <div class="info-card">
-          <div class="info-card-head">
-            <h3>نظرة عامة على الأداء</h3>
-            <span class="badge-live"><span class="bd"></span> مباشر</span>
-          </div>
-          <ul class="bullets">
-            <li>
-              <span class="bullet-ic" style="--c:var(--financial)">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5A3.5 3.5 0 006 8.5v0A3.5 3.5 0 009.5 12h5a3.5 3.5 0 010 7H6"/></svg>
-              </span>
-              <div>
-                <strong>الإيرادات</strong>
-                <span><span data-stat="revenue.total"><%= stats.revenue.total.toLocaleString('ar-SA') %></span> ريال</span>
-              </div>
-            </li>
-            <li>
-              <span class="bullet-ic" style="--c:var(--media)">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 19a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h14a2 2 0 012 2z"/><polyline points="21 15 16 10 5 21"/></svg>
-              </span>
-              <div>
-                <strong>التصاميم</strong>
-                <span><span data-stat="designs.total"><%= stats.designs.total.toLocaleString('ar-SA') %></span> تصميم</span>
-              </div>
-            </li>
-            <li>
-              <span class="bullet-ic" style="--c:var(--content)">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
-              </span>
-              <div>
-                <strong>المنشورات</strong>
-                <span><span data-stat="publications.total"><%= stats.publications.total.toLocaleString('ar-SA') %></span> منشور</span>
-              </div>
-            </li>
-            <li>
-              <span class="bullet-ic" style="--c:var(--visits)">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
-              </span>
-              <div>
-                <strong>الزيارات</strong>
-                <span><span data-stat="visits.total"><%= stats.visits.total.toLocaleString('ar-SA') %></span> زيارة</span>
-              </div>
-            </li>
-          </ul>
-        </div>
-      </section>
-
-      <!-- Detail panels -->
-      <section class="details-grid" data-reveal>
-        <div class="panel panel-glass panel-collapsible" id="financial-detail">
-          <div class="panel-head">
-            <div class="panel-head-l">
-              <span class="dot dot-financial"></span>
-              <h3>تفصيل الإيرادات</h3>
+        <!-- ============= REVENUE VIEW ============= -->
+        <div class="ws-view ws-deepdive" data-view="revenue">
+          <div class="ws-dd-head">
+            <div class="ws-dd-title">
+              <span class="ws-dd-dot" style="background:var(--financial)"></span>
+              <h2>تقرير الإيرادات</h2>
+              <span class="ws-dd-pill"><span data-list-count="revenue"><%= stats.revenue.items.length %></span> سجل</span>
             </div>
-            <button class="panel-close" data-close-panel="financial-detail" aria-label="إغلاق">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
-            </button>
+            <div class="ws-dd-tools">
+              <div class="seg-filter" data-filter-group="revenue">
+                <button class="seg-chip active" data-filter="all">الكل</button>
+                <button class="seg-chip" data-filter="majorDonors" style="--c:#10b981">كبار الداعمين</button>
+                <button class="seg-chip" data-filter="donationPlatform" style="--c:#34d399">ديسق</button>
+                <button class="seg-chip" data-filter="donationKiosk" style="--c:#6ee7b7">الكشك</button>
+                <button class="seg-chip" data-filter="grantOrganizations" style="--c:#22c55e">الجهات المانحة</button>
+                <button class="seg-chip" data-filter="governmentSupport" style="--c:#84cc16">الدعم الحكومي</button>
+              </div>
+            </div>
           </div>
-          <div class="panel-body donut-row">
-            <div class="donut-wrap"><canvas id="revenueDonut"></canvas></div>
-            <ul class="legend legend-x">
-              <li><span class="sw" style="background:#10b981"></span><span>كبار الداعمين</span><strong data-stat="revenue.majorDonors"><%= stats.revenue.majorDonors.toLocaleString('ar-SA') %></strong></li>
-              <li><span class="sw" style="background:#34d399"></span><span>ديسق</span><strong data-stat="revenue.donationPlatform"><%= stats.revenue.donationPlatform.toLocaleString('ar-SA') %></strong></li>
-              <li><span class="sw" style="background:#6ee7b7"></span><span>كشك التبرعات</span><strong data-stat="revenue.donationKiosk"><%= stats.revenue.donationKiosk.toLocaleString('ar-SA') %></strong></li>
-              <li><span class="sw" style="background:#22c55e"></span><span>الجهات المانحة</span><strong data-stat="revenue.grantOrganizations"><%= stats.revenue.grantOrganizations.toLocaleString('ar-SA') %></strong></li>
-              <li><span class="sw" style="background:#84cc16"></span><span>الدعم الحكومي</span><strong data-stat="revenue.governmentSupport"><%= stats.revenue.governmentSupport.toLocaleString('ar-SA') %></strong></li>
-            </ul>
+
+          <div class="ws-dd-grid">
+            <div class="ws-chart-card">
+              <h4>توزيع المصادر</h4>
+              <div class="donut-wrap-lg"><canvas id="revenueDonut"></canvas></div>
+              <ul class="legend legend-x">
+                <li><span class="sw" style="background:#10b981"></span><span>كبار الداعمين</span><strong data-stat="revenue.majorDonors"><%= stats.revenue.majorDonors.toLocaleString('ar-SA') %></strong></li>
+                <li><span class="sw" style="background:#34d399"></span><span>ديسق</span><strong data-stat="revenue.donationPlatform"><%= stats.revenue.donationPlatform.toLocaleString('ar-SA') %></strong></li>
+                <li><span class="sw" style="background:#6ee7b7"></span><span>كشك التبرعات</span><strong data-stat="revenue.donationKiosk"><%= stats.revenue.donationKiosk.toLocaleString('ar-SA') %></strong></li>
+                <li><span class="sw" style="background:#22c55e"></span><span>الجهات المانحة</span><strong data-stat="revenue.grantOrganizations"><%= stats.revenue.grantOrganizations.toLocaleString('ar-SA') %></strong></li>
+                <li><span class="sw" style="background:#84cc16"></span><span>الدعم الحكومي</span><strong data-stat="revenue.governmentSupport"><%= stats.revenue.governmentSupport.toLocaleString('ar-SA') %></strong></li>
+              </ul>
+            </div>
+
+            <div class="ws-records-card">
+              <h4>السجلات المضافة (<span data-list-count="revenue"><%= stats.revenue.items.length %></span>) <span class="dd-hint">— انقر سجلاً لعرض كامل تفاصيله</span></h4>
+              <div class="records" data-records="revenue"></div>
+            </div>
           </div>
         </div>
 
-        <div class="panel panel-glass panel-collapsible" id="visits-detail">
-          <div class="panel-head">
-            <div class="panel-head-l">
-              <span class="dot dot-visits"></span>
-              <h3>تفصيل الزيارات</h3>
+        <!-- ============= DESIGNS VIEW ============= -->
+        <div class="ws-view ws-deepdive" data-view="designs">
+          <div class="ws-dd-head">
+            <div class="ws-dd-title">
+              <span class="ws-dd-dot" style="background:var(--media)"></span>
+              <h2>تقرير التصاميم</h2>
+              <span class="ws-dd-pill"><span data-list-count="designs"><%= stats.designs.items.length %></span> تصميم</span>
             </div>
-            <button class="panel-close" data-close-panel="visits-detail" aria-label="إغلاق">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
-            </button>
+            <div class="ws-dd-tools">
+              <div class="seg-filter" data-filter-group="designs">
+                <button class="seg-chip active" data-filter="all">الكل</button>
+                <button class="seg-chip" data-filter="image">صور</button>
+                <button class="seg-chip" data-filter="video">فيديو</button>
+                <button class="seg-chip" data-filter="pdf">PDF</button>
+              </div>
+            </div>
           </div>
-          <div class="panel-body">
-            <canvas id="visitsBar" height="180"></canvas>
+
+          <div class="ws-dd-grid ws-dd-grid-1">
+            <div class="ws-records-card">
+              <h4>المعرض <span class="dd-hint">— انقر تصميماً للمعاينة الكاملة</span></h4>
+              <div class="design-mosaic" data-records="designs"></div>
+            </div>
           </div>
         </div>
 
-        <div class="panel panel-glass panel-collapsible" id="media-detail">
-          <div class="panel-head">
-            <div class="panel-head-l">
-              <span class="dot dot-media"></span>
-              <h3>الإعلام — التصاميم</h3>
+        <!-- ============= PUBLICATIONS VIEW ============= -->
+        <div class="ws-view ws-deepdive" data-view="publications">
+          <div class="ws-dd-head">
+            <div class="ws-dd-title">
+              <span class="ws-dd-dot" style="background:var(--content)"></span>
+              <h2>تقرير المنشورات</h2>
+              <span class="ws-dd-pill"><span data-list-count="publications"><%= stats.publications.items.length %></span> سجل</span>
             </div>
-            <button class="panel-close" data-close-panel="media-detail" aria-label="إغلاق">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
-            </button>
           </div>
-          <div class="panel-body">
-            <div class="big-figure compact-figure">
-              <div class="big-num big-num-grad" data-stat="designs.total"><%= stats.designs.total.toLocaleString('ar-SA') %></div>
-              <div class="big-label">إجمالي التصاميم خلال الأسبوع الحالي</div>
+
+          <div class="ws-dd-grid">
+            <div class="ws-chart-card">
+              <h4>الإجمالي</h4>
+              <div class="big-figure">
+                <div class="big-num big-num-grad" data-stat="publications.total"><%= stats.publications.total.toLocaleString('ar-SA') %></div>
+                <div class="big-label">منشور خلال الأسبوع الحالي</div>
+              </div>
+              <canvas id="publicationsChart" height="160"></canvas>
             </div>
-            <div data-design-gallery>
-              <% if (!stats.designs.items.length) { %>
-                <div class="empty">لا توجد تصاميم هذا الأسبوع.</div>
-              <% } else { %>
-                <div class="design-gallery">
-                <% stats.designs.items.forEach(function(design) {
-                     const mt = design.mediaType || 'image'; %>
-                  <article class="design-card">
-                    <% if (design.imagePath) { %>
-                      <% if (mt === 'video') { %>
-                        <video src="<%= design.imagePath %>" controls preload="metadata"></video>
-                      <% } else if (mt === 'pdf') { %>
-                        <a class="design-pdf" href="<%= design.imagePath %>" target="_blank" rel="noopener">📄 فتح ملف PDF</a>
-                      <% } else { %>
-                        <img src="<%= design.imagePath %>" alt="<%= design.title %>">
-                      <% } %>
-                    <% } %>
-                    <div class="design-card-body">
-                      <strong><%= design.title %></strong>
-                      <span><%= new Date(design.date).toLocaleDateString('ar-SA') %></span>
-                      <% if (design.addedBy) { %><span><%= design.addedBy.name %></span><% } %>
-                      <% if (design.note) { %><p><%= design.note %></p><% } %>
-                    </div>
-                  </article>
-                <% }) %>
+            <div class="ws-records-card">
+              <h4>السجلات (<span data-list-count="publications"><%= stats.publications.items.length %></span>) <span class="dd-hint">— انقر للتفاصيل</span></h4>
+              <div class="records" data-records="publications"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ============= VISITS VIEW ============= -->
+        <div class="ws-view ws-deepdive" data-view="visits">
+          <div class="ws-dd-head">
+            <div class="ws-dd-title">
+              <span class="ws-dd-dot" style="background:var(--visits)"></span>
+              <h2>تقرير الزيارات</h2>
+              <span class="ws-dd-pill"><span data-list-count="visits"><%= stats.visits.items.length %></span> سجل</span>
+            </div>
+            <div class="ws-dd-tools">
+              <div class="seg-filter" data-filter-group="visits">
+                <button class="seg-chip active" data-filter="all">الكل</button>
+                <button class="seg-chip" data-filter="associationToExternal" style="--c:#8b5cf6">من الجمعية</button>
+                <button class="seg-chip" data-filter="externalToAssociation" style="--c:#a78bfa">للجمعية</button>
+                <button class="seg-chip" data-filter="websiteVisits" style="--c:#c4b5fd">الموقع</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="ws-dd-grid">
+            <div class="ws-chart-card">
+              <h4>توزيع الزيارات</h4>
+              <canvas id="visitsBar" height="220"></canvas>
+            </div>
+            <div class="ws-records-card">
+              <h4>السجلات (<span data-list-count="visits"><%= stats.visits.items.length %></span>) <span class="dd-hint">— انقر للتفاصيل</span></h4>
+              <div class="records" data-records="visits"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ============= TASKS VIEW ============= -->
+        <div class="ws-view ws-deepdive" data-view="tasks">
+          <div class="ws-dd-head">
+            <div class="ws-dd-title">
+              <span class="ws-dd-dot" style="background:#10b981"></span>
+              <h2>تقرير المهام</h2>
+              <span class="ws-dd-pill"><span data-stat="tasks.done"><%= stats.tasks.done %></span>/<span data-stat="tasks.total"><%= stats.tasks.total %></span></span>
+            </div>
+            <div class="ws-dd-tools">
+              <div class="seg-filter" data-filter-group="tasks">
+                <button class="seg-chip active" data-filter="all">الكل</button>
+                <button class="seg-chip" data-filter="done" style="--c:#10b981">مكتملة</button>
+                <button class="seg-chip" data-filter="pending" style="--c:#f59e0b">قيد التنفيذ</button>
+                <button class="seg-chip" data-filter="missed" style="--c:#ef4444">متأخرة</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="ws-dd-grid">
+            <div class="ws-chart-card">
+              <h4>نسبة الإنجاز</h4>
+              <div class="ring-gauge ring-gauge-lg">
+                <svg viewBox="0 0 120 120">
+                  <defs>
+                    <linearGradient id="ringGrad" x1="0" y1="0" x2="1" y2="1">
+                      <stop offset="0%" stop-color="#10b981"/>
+                      <stop offset="100%" stop-color="#34d399"/>
+                    </linearGradient>
+                  </defs>
+                  <circle class="ring-track" cx="60" cy="60" r="52"/>
+                  <circle class="ring-fill" cx="60" cy="60" r="52" stroke="url(#ringGrad)"/>
+                </svg>
+                <div class="ring-center">
+                  <div class="ring-value"><span data-stat="tasks.progress"><%= stats.tasks.progress %></span><i>%</i></div>
+                  <div class="ring-caption">الإنجاز الكلي</div>
                 </div>
-              <% } %>
+              </div>
+              <div class="progress sr-only" aria-hidden="true">
+                <div class="progress-bar" style="width: <%= stats.tasks.progress %>%" data-stat="tasks.progress"><%= stats.tasks.progress %>%</div>
+              </div>
+            </div>
+            <div class="ws-records-card">
+              <h4>قائمة المهام <span class="dd-hint">— انقر مهمة للتفاصيل</span></h4>
+              <div class="records" data-records="tasks"></div>
             </div>
           </div>
         </div>
 
-        <div class="panel panel-glass panel-collapsible" id="content-detail">
-          <div class="panel-head">
-            <div class="panel-head-l">
-              <span class="dot dot-content"></span>
-              <h3>المحتوى المنشور</h3>
-            </div>
-            <button class="panel-close" data-close-panel="content-detail" aria-label="إغلاق">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
-            </button>
-          </div>
-          <div class="panel-body big-figure">
-            <div class="big-num big-num-grad" data-stat="publications.total"><%= stats.publications.total.toLocaleString('ar-SA') %></div>
-            <div class="big-label">إجمالي المنشورات خلال الأسبوع الحالي</div>
-          </div>
-        </div>
       </section>
 
-      <!-- Confetti canvas for celebrations -->
+      <!-- ACTIVITY STREAM -->
+      <section class="activity-section" data-reveal>
+        <div class="activity-head">
+          <h3><span class="live-dot small" aria-hidden="true"><span></span></span> خلاصة النشاط</h3>
+          <div class="seg-filter" data-filter-group="activity">
+            <button class="seg-chip active" data-filter="all">الكل</button>
+            <button class="seg-chip" data-filter="revenue" style="--c:#10b981">إيرادات</button>
+            <button class="seg-chip" data-filter="design" style="--c:#f59e0b">تصاميم</button>
+            <button class="seg-chip" data-filter="publication" style="--c:#38bdf8">منشورات</button>
+            <button class="seg-chip" data-filter="visit" style="--c:#8b5cf6">زيارات</button>
+            <button class="seg-chip" data-filter="task" style="--c:#0ea5e9">مهام</button>
+          </div>
+        </div>
+        <div class="activity-stream" data-activity></div>
+      </section>
+
+      <!-- DETAIL DRAWER -->
+      <div class="drawer-backdrop" data-drawer-backdrop></div>
+      <aside class="drawer" data-drawer aria-hidden="true">
+        <header class="drawer-head">
+          <div class="drawer-head-l">
+            <span class="drawer-dot" data-drawer-dot></span>
+            <h3 data-drawer-title>تفاصيل السجل</h3>
+          </div>
+          <button class="drawer-close" data-drawer-close aria-label="إغلاق">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+          </button>
+        </header>
+        <div class="drawer-body" data-drawer-body></div>
+      </aside>
+
+      <!-- Confetti -->
       <canvas id="confetti-canvas" aria-hidden="true"></canvas>
     </main>
   </div>

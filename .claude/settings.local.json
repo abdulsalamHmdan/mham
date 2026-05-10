@@ -6,7 +6,8 @@
       "Bash(node -c \"C:\\\\Users\\\\asus\\\\Desktop\\\\mham\\\\routes\\\\employee.js\")",
       "Bash(node -c \"C:\\\\Users\\\\asus\\\\Desktop\\\\mham\\\\models\\\\Revenue.js\")",
       "Bash(node -c \"C:\\\\Users\\\\asus\\\\Desktop\\\\mham\\\\models\\\\Publication.js\")",
-      "Bash(node -c \"C:\\\\Users\\\\asus\\\\Desktop\\\\mham\\\\models\\\\Visit.js\")"
+      "Bash(node -c \"C:\\\\Users\\\\asus\\\\Desktop\\\\mham\\\\models\\\\Visit.js\")",
+      "Bash(node -e \"const ejs=require\\('ejs'\\); const fs=require\\('fs'\\); ejs.compile\\(fs.readFileSync\\('views/dashboard.ejs','utf8'\\), {filename:'views/dashboard.ejs'}\\); console.log\\('EJS_OK'\\);\")"
     ]
   }
 }
