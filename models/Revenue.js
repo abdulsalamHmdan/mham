@@ -4,13 +4,21 @@ const revenueSchema = new mongoose.Schema({
   majorDonors: { type: Number, default: 0, min: 0 },
   donationPlatform: { type: Number, default: 0, min: 0 },
   donationKiosk: { type: Number, default: 0, min: 0 },
+  grantOrganizations: { type: Number, default: 0, min: 0 },
+  governmentSupport: { type: Number, default: 0, min: 0 },
   note: { type: String, default: '' },
   date: { type: Date, default: Date.now },
   addedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }
 }, { timestamps: true });
 
 revenueSchema.virtual('total').get(function () {
-  return (this.majorDonors || 0) + (this.donationPlatform || 0) + (this.donationKiosk || 0);
+  return (
+    (this.majorDonors || 0) +
+    (this.donationPlatform || 0) +
+    (this.donationKiosk || 0) +
+    (this.grantOrganizations || 0) +
+    (this.governmentSupport || 0)
+  );
 });
 
 revenueSchema.set('toJSON', { virtuals: true });

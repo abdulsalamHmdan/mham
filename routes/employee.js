@@ -1,13 +1,24 @@
 const express = require('express');
 const router = express.Router();
+const multer = require('multer');
 const { requireRole } = require('../middleware/auth');
 const Revenue = require('../models/Revenue');
 const Design = require('../models/Design');
 const Publication = require('../models/Publication');
 const Visit = require('../models/Visit');
 const { currentWeekDateFilter, getCurrentWeekRange, formatDateInput, formatWeekLabel } = require('../utils/week');
+const { getDisqRevenueAmount } = require('../services/disqRevenue');
+const { saveImage } = require('../services/imageStorage');
 
 router.use(requireRole('employee'));
+
+const upload = multer({
+  storage: multer.memoryStorage(),
+  fileFilter: (req, file, cb) => {
+    cb(null, file.mimetype.startsWith('image/'));
+  },
+  limits: { fileSize: 5 * 1024 * 1024 }
+});
 
 const MODELS = {
   financial: Revenue,
@@ -32,11 +43,14 @@ router.get('/', async (req, res, next) => {
       addedBy: req.session.user.id,
       ...currentWeekDateFilter()
     }).sort({ date: -1, createdAt: -1 }).limit(10).lean();
+    const disqRevenue = dept === 'financial' ? await getDisqRevenueAmount() : 0;
     res.render('employee', {
       title: `لوحة قسم ${DEPT_LABELS[dept]}`,
       department: dept,
       departmentLabel: DEPT_LABELS[dept],
       recent,
+      financialEntry: dept === 'financial' ? (recent[0] || null) : null,
+      disqRevenue,
       weekLabel: formatWeekLabel(weekRange),
       weekStartInput: formatDateInput(weekRange.start),
       weekEndInput: formatDateInput(new Date(weekRange.end.getTime() - 1)),
@@ -47,30 +61,52 @@ router.get('/', async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
-router.post('/submit', async (req, res, next) => {
+router.post('/submit', upload.single('image'), async (req, res, next) => {
   try {
     const dept = req.session.user.department;
     const userId = req.session.user.id;
     const weekRange = getCurrentWeekRange();
-    const entryDate = req.body.date ? new Date(req.body.date) : new Date();
+    const entryDate = dept === 'financial'
+      ? weekRange.start
+      : (req.body.date ? new Date(req.body.date) : new Date());
     if (entryDate < weekRange.start || entryDate >= weekRange.end) {
       return res.redirect('/employee?outsideWeek=1');
     }
     let doc;
 
     if (dept === 'financial') {
-      doc = await Revenue.create({
-        majorDonors: Number(req.body.majorDonors) || 0,
-        donationPlatform: Number(req.body.donationPlatform) || 0,
-        donationKiosk: Number(req.body.donationKiosk) || 0,
-        note: req.body.note || '',
-        date: entryDate,
-        addedBy: userId
-      });
+      doc = await Revenue.findOneAndUpdate(
+        {
+          addedBy: userId,
+          date: { $gte: weekRange.start, $lt: weekRange.end }
+        },
+        {
+          $set: {
+            majorDonors: Number(req.body.majorDonors) || 0,
+            donationPlatform: 0,
+            donationKiosk: Number(req.body.donationKiosk) || 0,
+            grantOrganizations: Number(req.body.grantOrganizations) || 0,
+            governmentSupport: Number(req.body.governmentSupport) || 0,
+            note: req.body.note || '',
+            date: entryDate,
+            addedBy: userId
+          }
+        },
+        { new: true, upsert: true, setDefaultsOnInsert: true }
+      );
     } else if (dept === 'media') {
+      if (!req.file || !req.body.title) {
+        return res.redirect('/employee');
+      }
+      const image = await saveImage(req.file);
+
       doc = await Design.create({
-        count: Number(req.body.count) || 0,
-        title: req.body.title || '',
+        count: 1,
+        title: req.body.title.trim(),
+        imagePath: image.url,
+        imageKey: image.key,
+        imageStorage: image.storage,
+        imageOriginalName: req.file.originalname,
         note: req.body.note || '',
         date: entryDate,
         addedBy: userId

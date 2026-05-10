@@ -42,6 +42,7 @@
   --shadow: 0 4px 16px rgba(15, 31, 61, 0.06);
   --shadow-lg: 0 12px 32px rgba(15, 31, 61, 0.10);
   --radius: 14px;
+  --radius-xs: 6px;
   --radius-sm: 10px;
   --radius-lg: 20px;
   --t-fast: 160ms cubic-bezier(.2,.7,.3,1);
@@ -378,6 +379,7 @@ h1, h2, h3, h4 { margin: 0; font-weight: 700; color: var(--navy-900); }
 .legend strong { font-weight: 800; color: var(--navy-900); font-feature-settings: 'tnum' 1; }
 
 .big-figure { text-align: center; padding: 20px 0; }
+.compact-figure { padding: 4px 0 18px; }
 .big-num { font-size: 56px; font-weight: 900; color: var(--navy-900); letter-spacing: -1.5px; line-height: 1; font-feature-settings: 'tnum' 1; }
 .big-label { color: var(--text-muted); margin-top: 8px; font-size: 14px; }
 
@@ -500,6 +502,44 @@ h1, h2, h3, h4 { margin: 0; font-weight: 700; color: var(--navy-900); }
 .table tbody tr { transition: background var(--t-fast); }
 .table tbody tr:hover { background: var(--surface-2); }
 .empty { padding: 24px; text-align: center; color: var(--text-muted); }
+.table-thumb {
+  width: 58px;
+  height: 42px;
+  object-fit: cover;
+  border-radius: var(--radius-xs);
+  border: 1px solid var(--border);
+}
+
+.design-gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 12px;
+}
+.design-card {
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+}
+.design-card img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  background: var(--surface-2);
+}
+.design-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 10px;
+}
+.design-card-body strong { color: var(--navy-900); font-size: 14px; }
+.design-card-body span, .design-card-body p {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 12.5px;
+}
 
 /* ==========================================================
    Tasks

@@ -36,7 +36,10 @@
     setStat('revenue.majorDonors', s.revenue.majorDonors);
     setStat('revenue.donationPlatform', s.revenue.donationPlatform);
     setStat('revenue.donationKiosk', s.revenue.donationKiosk);
+    setStat('revenue.grantOrganizations', s.revenue.grantOrganizations);
+    setStat('revenue.governmentSupport', s.revenue.governmentSupport);
     setStat('designs.total', s.designs.total);
+    renderDesignGallery(s.designs.items || []);
     setStat('publications.total', s.publications.total);
     setStat('visits.total', s.visits.total);
     setStat('tasks.total', s.tasks.total);
@@ -52,10 +55,16 @@
     revenueChart = new Chart(ctx, {
       type: 'doughnut',
       data: {
-        labels: ['كبار الداعمين', 'ديسق', 'كشك التبرعات'],
+        labels: ['كبار الداعمين', 'ديسق', 'كشك التبرعات', 'الجهات المانحة', 'الدعم الحكومي'],
         datasets: [{
-          data: [stats.revenue.majorDonors, stats.revenue.donationPlatform, stats.revenue.donationKiosk],
-          backgroundColor: ['#10b981', '#34d399', '#6ee7b7'],
+          data: [
+            stats.revenue.majorDonors,
+            stats.revenue.donationPlatform,
+            stats.revenue.donationKiosk,
+            stats.revenue.grantOrganizations,
+            stats.revenue.governmentSupport
+          ],
+          backgroundColor: ['#10b981', '#34d399', '#6ee7b7', '#22c55e', '#84cc16'],
           borderWidth: 0,
           hoverOffset: 8
         }]
@@ -82,7 +91,13 @@
 
   function updateRevenueChart(s) {
     if (!revenueChart) return;
-    revenueChart.data.datasets[0].data = [s.revenue.majorDonors, s.revenue.donationPlatform, s.revenue.donationKiosk];
+    revenueChart.data.datasets[0].data = [
+      s.revenue.majorDonors,
+      s.revenue.donationPlatform,
+      s.revenue.donationKiosk,
+      s.revenue.grantOrganizations,
+      s.revenue.governmentSupport
+    ];
     revenueChart.update();
   }
 
@@ -126,6 +141,45 @@
     if (!visitsChart) return;
     visitsChart.data.datasets[0].data = [s.visits.associationToExternal, s.visits.externalToAssociation, s.visits.websiteVisits];
     visitsChart.update();
+  }
+
+  function renderDesignGallery(items) {
+    const gallery = document.querySelector('[data-design-gallery]');
+    if (!gallery) return;
+
+    if (!items.length) {
+      gallery.innerHTML = '<div class="empty">لا توجد تصاميم هذا الأسبوع.</div>';
+      return;
+    }
+
+    gallery.innerHTML = '<div class="design-gallery">' + items.map((design) => {
+      const title = escapeHtml(design.title || '');
+      const note = escapeHtml(design.note || '');
+      const date = design.date ? new Date(design.date).toLocaleDateString('ar-SA') : '';
+      const employee = design.addedBy && design.addedBy.name ? escapeHtml(design.addedBy.name) : '';
+      const image = design.imagePath ? `<img src="${escapeAttribute(design.imagePath)}" alt="${title}">` : '';
+      return `
+        <article class="design-card">
+          ${image}
+          <div class="design-card-body">
+            <strong>${title}</strong>
+            <span>${date}</span>
+            ${employee ? `<span>${employee}</span>` : ''}
+            ${note ? `<p>${note}</p>` : ''}
+          </div>
+        </article>
+      `;
+    }).join('') + '</div>';
+  }
+
+  function escapeHtml(value) {
+    return String(value).replace(/[&<>"']/g, (ch) => ({
+      '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+    }[ch]));
+  }
+
+  function escapeAttribute(value) {
+    return escapeHtml(value).replace(/`/g, '&#96;');
   }
 
   /* Progressive Disclosure: KPI cards expand their detail panels */

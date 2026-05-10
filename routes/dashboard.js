@@ -7,29 +7,37 @@ const Publication = require('../models/Publication');
 const Visit = require('../models/Visit');
 const Task = require('../models/Task');
 const { currentWeekDateFilter, getCurrentWeekRange, formatWeekLabel } = require('../utils/week');
+const { getDisqRevenueAmount } = require('../services/disqRevenue');
 
 router.use(requireRole('executive'));
 
 async function gatherStats() {
   const filter = currentWeekDateFilter();
 
-  const [revenues, designs, publications, visits, tasks] = await Promise.all([
+  const [revenues, designs, publications, visits, tasks, disqRevenue] = await Promise.all([
     Revenue.find(filter).lean(),
-    Design.find(filter).lean(),
+    Design.find(filter).populate('addedBy', 'name department').sort({ date: -1, createdAt: -1 }).lean(),
     Publication.find(filter).lean(),
     Visit.find(filter).lean(),
-    Task.find().lean()
+    Task.find().lean(),
+    getDisqRevenueAmount()
   ]);
 
   const revenueBreakdown = revenues.reduce((acc, r) => {
     acc.majorDonors += r.majorDonors || 0;
-    acc.donationPlatform += r.donationPlatform || 0;
     acc.donationKiosk += r.donationKiosk || 0;
+    acc.grantOrganizations += r.grantOrganizations || 0;
+    acc.governmentSupport += r.governmentSupport || 0;
     return acc;
-  }, { majorDonors: 0, donationPlatform: 0, donationKiosk: 0 });
-  const revenueTotal = revenueBreakdown.majorDonors + revenueBreakdown.donationPlatform + revenueBreakdown.donationKiosk;
+  }, { majorDonors: 0, donationPlatform: disqRevenue, donationKiosk: 0, grantOrganizations: 0, governmentSupport: 0 });
+  const revenueTotal =
+    revenueBreakdown.majorDonors +
+    revenueBreakdown.donationPlatform +
+    revenueBreakdown.donationKiosk +
+    revenueBreakdown.grantOrganizations +
+    revenueBreakdown.governmentSupport;
 
-  const designsTotal = designs.reduce((s, d) => s + (d.count || 0), 0);
+  const designsTotal = designs.reduce((s, d) => s + (d.count || 1), 0);
   const publicationsTotal = publications.reduce((s, p) => s + (p.count || 0), 0);
 
   const visitsBreakdown = visits.reduce((acc, v) => {
@@ -48,7 +56,7 @@ async function gatherStats() {
     period: 'week',
     weekLabel: formatWeekLabel(),
     revenue: { total: revenueTotal, ...revenueBreakdown },
-    designs: { total: designsTotal },
+    designs: { total: designsTotal, items: designs },
     publications: { total: publicationsTotal },
     visits: { total: visitsTotal, ...visitsBreakdown },
     tasks: { total: tasksTotal, done: tasksDone, progress: tasksProgress }

@@ -44,6 +44,21 @@ npm start
 ```
 ثم افتح: http://localhost:3000
 
+## رفع الصور على Render
+
+Render يستخدم filesystem مؤقتاً افتراضياً، لذلك لا تعتمد على حفظ صور التصاميم داخل المشروع في الإنتاج. التطبيق يدعم تخزين الصور في خدمة S3-compatible مثل Cloudflare R2 أو AWS S3 عبر متغيرات البيئة:
+
+```bash
+S3_BUCKET=your-bucket
+S3_REGION=auto
+S3_ENDPOINT=https://your-account-id.r2.cloudflarestorage.com
+S3_ACCESS_KEY_ID=your-access-key
+S3_SECRET_ACCESS_KEY=your-secret-key
+S3_PUBLIC_BASE_URL=https://your-public-domain
+```
+
+إذا لم تكن هذه المتغيرات موجودة، سيحفظ التطبيق الصور محلياً فقط لأغراض التطوير.
+
 ## الأقسام
 
 | القسم | البيانات التي يدخلها |

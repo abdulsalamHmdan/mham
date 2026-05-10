@@ -88,6 +88,8 @@
               <li><span class="sw" style="background:#10b981"></span><span>كبار الداعمين</span><strong data-stat="revenue.majorDonors"><%= stats.revenue.majorDonors.toLocaleString('ar-SA') %></strong></li>
               <li><span class="sw" style="background:#34d399"></span><span>ديسق</span><strong data-stat="revenue.donationPlatform"><%= stats.revenue.donationPlatform.toLocaleString('ar-SA') %></strong></li>
               <li><span class="sw" style="background:#6ee7b7"></span><span>كشك التبرعات</span><strong data-stat="revenue.donationKiosk"><%= stats.revenue.donationKiosk.toLocaleString('ar-SA') %></strong></li>
+              <li><span class="sw" style="background:#22c55e"></span><span>الجهات المانحة</span><strong data-stat="revenue.grantOrganizations"><%= stats.revenue.grantOrganizations.toLocaleString('ar-SA') %></strong></li>
+              <li><span class="sw" style="background:#84cc16"></span><span>الدعم الحكومي</span><strong data-stat="revenue.governmentSupport"><%= stats.revenue.governmentSupport.toLocaleString('ar-SA') %></strong></li>
             </ul>
           </div>
         </div>
@@ -107,9 +109,32 @@
             <h3>الإعلام — التصاميم</h3>
             <span class="dot dot-media"></span>
           </div>
-          <div class="panel-body big-figure">
-            <div class="big-num" data-stat="designs.total"><%= stats.designs.total.toLocaleString('ar-SA') %></div>
-            <div class="big-label">إجمالي التصاميم خلال الأسبوع الحالي</div>
+          <div class="panel-body">
+            <div class="big-figure compact-figure">
+              <div class="big-num" data-stat="designs.total"><%= stats.designs.total.toLocaleString('ar-SA') %></div>
+              <div class="big-label">إجمالي التصاميم خلال الأسبوع الحالي</div>
+            </div>
+            <div data-design-gallery>
+              <% if (!stats.designs.items.length) { %>
+                <div class="empty">لا توجد تصاميم هذا الأسبوع.</div>
+              <% } else { %>
+                <div class="design-gallery">
+                <% stats.designs.items.forEach(function(design) { %>
+                  <article class="design-card">
+                    <% if (design.imagePath) { %>
+                      <img src="<%= design.imagePath %>" alt="<%= design.title %>">
+                    <% } %>
+                    <div class="design-card-body">
+                      <strong><%= design.title %></strong>
+                      <span><%= new Date(design.date).toLocaleDateString('ar-SA') %></span>
+                      <% if (design.addedBy) { %><span><%= design.addedBy.name %></span><% } %>
+                      <% if (design.note) { %><p><%= design.note %></p><% } %>
+                    </div>
+                  </article>
+                <% }) %>
+                </div>
+              <% } %>
+            </div>
           </div>
         </div>
 

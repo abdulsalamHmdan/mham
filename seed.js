@@ -2,7 +2,7 @@ require('dotenv').config();
 const mongoose = require('mongoose');
 const User = require('./models/User');
 
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/corporate_dashboard';
+const MONGODB_URI = process.env.MONGODB_URI;
 
 const users = [
   { name: 'المدير التنفيذي', username: 'executive', password: '123456', role: 'executive' },
