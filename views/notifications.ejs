@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <%- include('partials/head') %>
+  <script src="/socket.io/socket.io.js" defer></script>
+</head>
+<body>
+  <div class="layout">
+    <%- include('partials/sidebar') %>
+
+    <main class="main">
+      <header class="page-header">
+        <div>
+          <h1 class="page-title">الإشعارات</h1>
+          <p class="page-sub">آخر التنبيهات والتحديثات الموجهة إليك</p>
+        </div>
+        <% if (unreadCount > 0) { %>
+          <form method="POST" action="/notifications/read-all">
+            <button class="btn btn-ghost" type="submit">تعليم الكل كمقروء (<%= unreadCount %>)</button>
+          </form>
+        <% } %>
+      </header>
+
+      <% if (canSend) { %>
+      <section class="panel">
+        <div class="panel-head">
+          <h3>إرسال إشعار جديد</h3>
+        </div>
+        <div class="panel-body">
+          <form method="POST" action="/notifications/send" class="form-grid">
+            <label class="field field-full">
+              <span>العنوان</span>
+              <input type="text" name="title" required placeholder="مثال: اجتماع غداً الساعة 10">
+            </label>
+            <label class="field field-full">
+              <span>التفاصيل (اختياري)</span>
+              <textarea name="body" rows="2"></textarea>
+            </label>
+            <label class="field">
+              <span>النوع</span>
+              <select name="type">
+                <option value="info">تنبيه عام</option>
+                <option value="alert">عاجل</option>
+                <option value="task">مهمة</option>
+                <option value="system">نظام</option>
+              </select>
+            </label>
+            <label class="field">
+              <span>الجمهور</span>
+              <select name="audience" id="audienceSelect">
+                <option value="all">جميع المستخدمين</option>
+                <option value="executives">المديرون التنفيذيون</option>
+                <option value="employees">الموظفون</option>
+                <option value="admins">المشرفون</option>
+                <option value="financial">قسم: تنمية الموارد المالية</option>
+                <option value="media">قسم: الإعلام</option>
+                <option value="content">قسم: المحتوى المنشور</option>
+                <option value="followup">قسم: المتابعة</option>
+                <option value="custom">تحديد أفراد</option>
+              </select>
+            </label>
+            <fieldset class="field field-full" id="recipientsField" style="display:none">
+              <legend>اختر المستلمين</legend>
+              <div class="select-actions">
+                <button type="button" class="btn btn-ghost btn-sm" id="loadRecipients">تحميل القائمة</button>
+              </div>
+              <div class="check-grid" id="recipientsList">
+                <span class="muted">انقر "تحميل القائمة" لعرض الموظفين</span>
+              </div>
+            </fieldset>
+            <div class="form-actions">
+              <button type="submit" class="btn btn-primary">إرسال الإشعار</button>
+            </div>
+          </form>
+        </div>
+      </section>
+      <% } %>
+
+      <section class="panel">
+        <div class="panel-head">
+          <h3>الإشعارات المستلمة</h3>
+        </div>
+        <div class="panel-body">
+          <% if (!notifications.length) { %>
+            <div class="empty">لا توجد إشعارات حالياً.</div>
+          <% } else { %>
+            <ul class="notif-list">
+              <% notifications.forEach(function(n) { %>
+                <li class="notif-item <%= n.read ? 'is-read' : 'is-unread' %> notif-type-<%= n.type %>">
+                  <div class="notif-dot"></div>
+                  <div class="notif-body">
+                    <div class="notif-row">
+                      <strong class="notif-title"><%= n.title %></strong>
+                      <span class="notif-time"><%= new Date(n.createdAt).toLocaleString('ar-SA') %></span>
+                    </div>
+                    <% if (n.body) { %><div class="notif-text"><%= n.body %></div><% } %>
+                    <div class="notif-meta">
+                      <% if (n.sender) { %><span class="muted">من: <%= n.sender.name %></span><% } %>
+                      <% if (n.link) { %><a class="notif-link" href="<%= n.link %>">فتح</a><% } %>
+                    </div>
+                  </div>
+                  <div class="notif-actions">
+                    <% if (!n.read) { %>
+                      <button class="btn btn-ghost btn-sm" data-mark-read="<%= n._id %>">تعليم كمقروء</button>
+                    <% } %>
+                    <form method="POST" action="/notifications/<%= n._id %>/delete" class="inline">
+                      <button class="btn btn-ghost btn-sm" type="submit" title="حذف">حذف</button>
+                    </form>
+                  </div>
+                </li>
+              <% }) %>
+            </ul>
+          <% } %>
+        </div>
+      </section>
+    </main>
+  </div>
+  <script src="/js/notifications.js"></script>
+</body>
+</html>

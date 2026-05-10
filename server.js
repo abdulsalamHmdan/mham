@@ -42,6 +42,8 @@ app.use('/', require('./routes/auth'));
 app.use('/dashboard', require('./routes/dashboard'));
 app.use('/employee', require('./routes/employee'));
 app.use('/tasks', require('./routes/tasks'));
+app.use('/admin', require('./routes/admin'));
+app.use('/notifications', require('./routes/notifications'));
 app.use('/api', require('./routes/api'));
 
 app.use((req, res) => {
@@ -55,6 +57,11 @@ app.use((err, req, res, next) => {
 
 io.on('connection', (socket) => {
   socket.on('joinRoom', (room) => socket.join(room));
+  socket.on('identify', (userId) => {
+    if (typeof userId === 'string' && /^[a-f\d]{24}$/i.test(userId)) {
+      socket.join(`user:${userId}`);
+    }
+  });
 });
 
 mongoose.connect(MONGODB_URI)

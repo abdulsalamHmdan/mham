@@ -6,7 +6,7 @@ function requireLogin(req, res, next) {
 function requireRole(role) {
   return (req, res, next) => {
     if (!req.session.user) return res.redirect('/login');
-    if (req.session.user.role !== role) {
+    if (req.session.user.role !== role && !req.session.user.isAdmin) {
       return res.status(403).render('error', { title: 'غير مصرح', message: 'ليس لديك صلاحية الوصول لهذه الصفحة.' });
     }
     next();
@@ -16,11 +16,19 @@ function requireRole(role) {
 function requireDepartment(department) {
   return (req, res, next) => {
     if (!req.session.user) return res.redirect('/login');
-    if (req.session.user.department !== department && req.session.user.role !== 'executive') {
+    if (req.session.user.department !== department && req.session.user.role !== 'executive' && !req.session.user.isAdmin) {
       return res.status(403).render('error', { title: 'غير مصرح', message: 'هذا القسم ليس ضمن صلاحياتك.' });
     }
     next();
   };
 }
 
-module.exports = { requireLogin, requireRole, requireDepartment };
+function requireAdmin(req, res, next) {
+  if (!req.session.user) return res.redirect('/login');
+  if (!req.session.user.isAdmin) {
+    return res.status(403).render('error', { title: 'غير مصرح', message: 'هذه الصفحة مخصصة للمشرفين فقط.' });
+  }
+  next();
+}
+
+module.exports = { requireLogin, requireRole, requireDepartment, requireAdmin };

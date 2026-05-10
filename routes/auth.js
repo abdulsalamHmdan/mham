@@ -22,12 +22,17 @@ router.post('/login', async (req, res) => {
     if (!user || !(await user.verifyPassword(password || ''))) {
       return res.render('login', { title: 'تسجيل الدخول', error: 'اسم المستخدم أو كلمة المرور غير صحيحة.' });
     }
+    if (user.active === false) {
+      return res.render('login', { title: 'تسجيل الدخول', error: 'الحساب موقوف. يرجى مراجعة المشرف.' });
+    }
     req.session.user = {
       id: user._id.toString(),
       name: user.name,
       username: user.username,
       role: user.role,
-      department: user.department || null
+      department: user.department || null,
+      isAdmin: !!user.isAdmin,
+      permissions: user.permissions || []
     };
     res.redirect(user.role === 'executive' ? '/dashboard' : '/employee');
   } catch (err) {

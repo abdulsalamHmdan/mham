@@ -9,9 +9,16 @@ router.use(requireLogin);
 router.get('/', async (req, res, next) => {
   try {
     const isExecutive = req.session.user.role === 'executive';
+    const isAdmin = req.session.user.isAdmin;
     let tasks;
 
-    if (isExecutive) {
+    if (isAdmin) {
+      tasks = await Task.find()
+        .populate('owner', 'name department role')
+        .populate('assignedBy', 'name')
+        .sort({ owner: 1, status: 1, dueDate: 1 })
+        .lean();
+    } else if (isExecutive) {
       const employees = await User.find({ role: 'employee' }).select('_id').lean();
       tasks = await Task.find({ owner: { $in: employees.map((employee) => employee._id) } })
         .populate('owner', 'name department role')

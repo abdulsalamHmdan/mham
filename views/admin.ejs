@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <%- include('partials/head') %>
+  <script src="/socket.io/socket.io.js" defer></script>
+</head>
+<body>
+  <div class="layout">
+    <%- include('partials/sidebar') %>
+
+    <main class="main">
+      <header class="page-header">
+        <div>
+          <h1 class="page-title">لوحة الإدارة</h1>
+          <p class="page-sub">إدارة الموظفين والصلاحيات وإسناد المهام</p>
+        </div>
+      </header>
+
+      <% const flashMap = {
+           userCreated: 'تم إنشاء الحساب بنجاح',
+           userUpdated: 'تم تحديث الحساب',
+           userDeleted: 'تم حذف الحساب',
+           userExists: 'اسم المستخدم مستخدم مسبقاً',
+           missingFields: 'يرجى تعبئة الحقول المطلوبة',
+           tasksAssigned: 'تم إسناد المهمة',
+           taskDeleted: 'تم حذف المهمة',
+           cantDeleteSelf: 'لا يمكنك حذف حسابك',
+           notFound: 'العنصر غير موجود'
+         }; %>
+      <% if (flash && flashMap[flash]) { %>
+        <div class="alert alert-info"><%= flashMap[flash] %></div>
+      <% } %>
+
+      <div class="admin-tabs" role="tablist">
+        <button class="admin-tab active" data-tab="users">المستخدمون</button>
+        <button class="admin-tab" data-tab="newuser">إضافة مستخدم</button>
+        <button class="admin-tab" data-tab="assigntasks">إسناد مهام</button>
+        <button class="admin-tab" data-tab="alltasks">كل المهام</button>
+      </div>
+
+      <!-- Users tab -->
+      <section class="admin-pane is-active" data-pane="users">
+        <div class="panel">
+          <div class="panel-head">
+            <h3>المستخدمون (<%= users.length %>)</h3>
+          </div>
+          <div class="panel-body">
+            <div class="table-wrap">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>الاسم</th>
+                    <th>اسم المستخدم</th>
+                    <th>الدور</th>
+                    <th>القسم</th>
+                    <th>مشرف</th>
+                    <th>الصلاحيات</th>
+                    <th>الحالة</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% users.forEach(function(u) { %>
+                    <tr>
+                      <td><strong><%= u.name %></strong></td>
+                      <td class="mono"><%= u.username %></td>
+                      <td><%= u.role === 'executive' ? 'تنفيذي' : 'موظف' %></td>
+                      <td><%= u.department ? departmentLabels[u.department] : '—' %></td>
+                      <td><%= u.isAdmin ? '✓' : '—' %></td>
+                      <td><span class="muted"><%= (u.permissions || []).length %> / <%= permissions.length %></span></td>
+                      <td><%= u.active === false ? 'موقوف' : 'نشط' %></td>
+                      <td>
+                        <button class="btn btn-ghost btn-sm" data-edit-user='<%- JSON.stringify({ id: u._id, name: u.name, username: u.username, role: u.role, department: u.department || "", isAdmin: !!u.isAdmin, active: u.active !== false, permissions: u.permissions || [] }) %>'>تعديل</button>
+                      </td>
+                    </tr>
+                  <% }) %>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- New user tab -->
+      <section class="admin-pane" data-pane="newuser">
+        <div class="panel">
+          <div class="panel-head"><h3>إضافة مستخدم جديد</h3></div>
+          <div class="panel-body">
+            <form method="POST" action="/admin/users" class="form-grid">
+              <label class="field">
+                <span>الاسم الكامل</span>
+                <input type="text" name="name" required>
+              </label>
+              <label class="field">
+                <span>اسم المستخدم</span>
+                <input type="text" name="username" required pattern="[a-zA-Z0-9._-]+" placeholder="latin only">
+              </label>
+              <label class="field">
+                <span>كلمة المرور</span>
+                <input type="text" name="password" required value="123456">
+              </label>
+              <label class="field">
+                <span>الدور</span>
+                <select name="role" required id="newRole">
+                  <option value="executive">تنفيذي</option>
+                  <option value="employee">موظف</option>
+                </select>
+              </label>
+              <label class="field" id="newDeptField" style="display:none">
+                <span>القسم</span>
+                <select name="department">
+                  <% departments.forEach(function(d) { %>
+                    <option value="<%= d %>"><%= departmentLabels[d] %></option>
+                  <% }) %>
+                </select>
+              </label>
+              <label class="field">
+                <span>مشرف نظام</span>
+                <select name="isAdmin">
+                  <option value="">لا</option>
+                  <option value="1">نعم</option>
+                </select>
+              </label>
+              <fieldset class="field field-full">
+                <legend>الصلاحيات</legend>
+                <div class="check-grid">
+                  <% permissions.forEach(function(p) { %>
+                    <label class="check">
+                      <input type="checkbox" name="permissions" value="<%= p %>">
+                      <span><%= permissionLabels[p] %></span>
+                    </label>
+                  <% }) %>
+                </div>
+              </fieldset>
+              <div class="form-actions">
+                <button type="submit" class="btn btn-primary">إنشاء</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </section>
+
+      <!-- Assign tasks tab -->
+      <section class="admin-pane" data-pane="assigntasks">
+        <div class="panel">
+          <div class="panel-head"><h3>إسناد مهام</h3></div>
+          <div class="panel-body">
+            <form method="POST" action="/admin/tasks" class="form-grid">
+              <label class="field field-full">
+                <span>عنوان المهمة</span>
+                <input type="text" name="title" required>
+              </label>
+              <label class="field">
+                <span>تاريخ الاستحقاق</span>
+                <input type="date" name="dueDate" required value="<%= new Date(Date.now()+86400000*3).toISOString().slice(0,10) %>">
+              </label>
+              <label class="field field-full">
+                <span>الوصف (اختياري)</span>
+                <textarea name="description" rows="2"></textarea>
+              </label>
+              <fieldset class="field field-full">
+                <legend>الموظفون المستهدفون</legend>
+                <div class="select-actions">
+                  <button type="button" class="btn btn-ghost btn-sm" data-select-all="owners">تحديد الكل</button>
+                  <button type="button" class="btn btn-ghost btn-sm" data-select-none="owners">إلغاء التحديد</button>
+                </div>
+                <div class="check-grid">
+                  <% users.forEach(function(u) { %>
+                    <label class="check">
+                      <input type="checkbox" name="owners" value="<%= u._id %>">
+                      <span><%= u.name %> <small class="muted">(<%= u.username %>)</small></span>
+                    </label>
+                  <% }) %>
+                </div>
+              </fieldset>
+              <div class="form-actions">
+                <button type="submit" class="btn btn-primary">إسناد المهمة</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </section>
+
+      <!-- All tasks tab -->
+      <section class="admin-pane" data-pane="alltasks">
+        <div class="panel">
+          <div class="panel-head">
+            <h3>كل المهام (<%= tasks.length %>)</h3>
+          </div>
+          <div class="panel-body">
+            <% if (!tasks.length) { %>
+              <div class="empty">لا توجد مهام بعد.</div>
+            <% } else { %>
+              <div class="table-wrap">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>المهمة</th>
+                      <th>الموظف</th>
+                      <th>الاستحقاق</th>
+                      <th>الحالة</th>
+                      <th>أُسندت من</th>
+                      <th></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <% tasks.forEach(function(t) { %>
+                      <tr>
+                        <td><%= t.title %></td>
+                        <td><%= t.owner ? t.owner.name : '—' %></td>
+                        <td><%= new Date(t.dueDate).toLocaleDateString('ar-SA') %></td>
+                        <td>
+                          <% if (t.status === 'done') { %>
+                            <span class="badge badge-success">منجزة</span>
+                          <% } else { %>
+                            <span class="badge badge-warn">قيد التنفيذ</span>
+                          <% } %>
+                        </td>
+                        <td><%= t.assignedBy ? t.assignedBy.name : '—' %></td>
+                        <td>
+                          <form method="POST" action="/admin/tasks/<%= t._id %>/delete" onsubmit="return confirm('حذف هذه المهمة؟')">
+                            <button class="btn btn-ghost btn-sm" type="submit">حذف</button>
+                          </form>
+                        </td>
+                      </tr>
+                    <% }) %>
+                  </tbody>
+                </table>
+              </div>
+            <% } %>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Edit User Modal -->
+  <div class="modal" id="editUserModal" hidden>
+    <div class="modal-backdrop" data-close-modal></div>
+    <div class="modal-card">
+      <div class="modal-head">
+        <h3>تعديل المستخدم</h3>
+        <button class="modal-close" data-close-modal aria-label="إغلاق">×</button>
+      </div>
+      <form method="POST" id="editUserForm" class="form-grid">
+        <label class="field">
+          <span>الاسم</span>
+          <input type="text" name="name" required>
+        </label>
+        <label class="field">
+          <span>اسم المستخدم</span>
+          <input type="text" name="username" disabled>
+        </label>
+        <label class="field">
+          <span>الدور</span>
+          <select name="role" id="editRole">
+            <option value="executive">تنفيذي</option>
+            <option value="employee">موظف</option>
+          </select>
+        </label>
+        <label class="field" id="editDeptField">
+          <span>القسم</span>
+          <select name="department">
+            <% departments.forEach(function(d) { %>
+              <option value="<%= d %>"><%= departmentLabels[d] %></option>
+            <% }) %>
+          </select>
+        </label>
+        <label class="field">
+          <span>مشرف نظام</span>
+          <label class="switch"><input type="checkbox" name="isAdmin" value="1"><span></span></label>
+        </label>
+        <label class="field">
+          <span>الحساب نشط</span>
+          <label class="switch"><input type="checkbox" name="active" value="1"><span></span></label>
+        </label>
+        <label class="field field-full">
+          <span>كلمة مرور جديدة (اتركها فارغة للإبقاء)</span>
+          <input type="text" name="password" placeholder="••••••">
+        </label>
+        <fieldset class="field field-full">
+          <legend>الصلاحيات</legend>
+          <div class="select-actions">
+            <button type="button" class="btn btn-ghost btn-sm" data-grant-all>منح الكل</button>
+            <button type="button" class="btn btn-ghost btn-sm" data-revoke-all>إزالة الكل</button>
+          </div>
+          <div class="check-grid">
+            <% permissions.forEach(function(p) { %>
+              <label class="check">
+                <input type="checkbox" name="permissions" value="<%= p %>">
+                <span><%= permissionLabels[p] %></span>
+              </label>
+            <% }) %>
+          </div>
+        </fieldset>
+        <div class="form-actions form-actions-split">
+          <button type="button" class="btn btn-danger" id="deleteUserBtn">حذف الحساب</button>
+          <button type="submit" class="btn btn-primary">حفظ التعديلات</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="/js/admin.js"></script>
+</body>
+</html>

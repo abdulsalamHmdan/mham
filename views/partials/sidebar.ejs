@@ -26,6 +26,17 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
         <span><%= user.role === 'executive' ? 'متابعة المهام' : 'مهامي' %></span>
       </a>
+      <a class="nav-link <%= path.startsWith('/notifications') ? 'active' : '' %>" href="/notifications">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8a6 6 0 10-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+        <span>الإشعارات</span>
+        <span class="notif-badge" data-notif-badge style="display:none"></span>
+      </a>
+      <% if (user.isAdmin) { %>
+        <a class="nav-link <%= path.startsWith('/admin') ? 'active' : '' %>" href="/admin">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3 7h7l-5.5 4.5L18 21l-6-4-6 4 1.5-7.5L2 9h7z"/></svg>
+          <span>لوحة الإدارة</span>
+        </a>
+      <% } %>
     <% } %>
   </nav>
 
@@ -34,7 +45,7 @@
       <div class="user-avatar"><%= user.name.charAt(0) %></div>
       <div class="user-info">
         <div class="user-name"><%= user.name %></div>
-        <div class="user-role"><%= user.role === 'executive' ? 'مدير تنفيذي' : 'موظف' %></div>
+        <div class="user-role"><%= user.isAdmin ? 'مشرف نظام' : (user.role === 'executive' ? 'مدير تنفيذي' : 'موظف') %></div>
       </div>
       <form action="/logout" method="POST" class="logout-form">
         <button class="logout-btn" title="تسجيل الخروج" type="submit">
