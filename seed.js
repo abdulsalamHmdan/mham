@@ -13,27 +13,34 @@ const baseUsers = [
   { name: 'موظف المتابعة', username: 'followup', password: '123456', role: 'employee', department: 'followup' }
 ];
 
-const fullAccessTeam = [
-  { name: 'حمد البديوي',         username: 'hamad.albudaiwi' },
-  { name: 'عبدالله العبيكي',     username: 'abdullah.alobaiki' },
-  { name: 'عبدالسلام الشرقي',    username: 'abdulsalam.alsharqi' },
-  { name: 'حمد النقيدان',        username: 'hamad.alnoqaidan' },
-  { name: 'ماجد المرعول',        username: 'majed.almaroul' },
-  { name: 'عبدالله الدبيان',     username: 'abdullah.aldubayyan' },
-  { name: 'صالح الدامغ',         username: 'saleh.aldamigh' },
-  { name: 'عبدالعزيز الجابر',    username: 'abdulaziz.aljaber' },
-  { name: 'عبدالعزيز الحميدي',   username: 'abdulaziz.alhumaidi' },
-  { name: 'حمود الجنيني',        username: 'humood.aljunaini' },
-  { name: 'محمد الحواس',         username: 'mohammed.alhawas' }
+const SUBMIT_PERMS = ['submitFinancial', 'submitMedia', 'submitContent', 'submitFollowup'];
+
+// المشرف الوحيد: حمد البديوي — تنفيذي + كل الصلاحيات
+const adminTeam = [
+  { name: 'حمد البديوي', username: 'hamad.albudaiwi', password: '123456', role: 'executive', isAdmin: true, permissions: [...ALL_PERMISSIONS] }
+];
+
+// موظفو الإدخال — صلاحيات إدخال البيانات فقط
+const inputTeam = [
+  { name: 'عبدالله العبيكي',   username: 'abdullah.alobaiki',   department: 'followup'  },
+  { name: 'عبدالسلام الشرقي',  username: 'abdulsalam.alsharqi', department: 'financial' },
+  { name: 'حمد النقيدان',      username: 'hamad.alnoqaidan',    department: 'financial' },
+  { name: 'ماجد المرعول',      username: 'majed.almaroul',      department: 'financial' },
+  { name: 'عبدالله الدبيان',   username: 'abdullah.aldubayyan', department: 'media'     },
+  { name: 'صالح الدامغ',       username: 'saleh.aldamigh',      department: 'media'     },
+  { name: 'عبدالعزيز الجابر',  username: 'abdulaziz.aljaber',   department: 'media'     },
+  { name: 'عبدالعزيز الحميدي', username: 'abdulaziz.alhumaidi', department: 'media'     },
+  { name: 'حمود الجنيني',      username: 'humood.aljunaini',    department: 'media'     },
+  { name: 'محمد الحواس',       username: 'mohammed.alhawas',    department: 'media'     }
 ].map(u => ({
   ...u,
   password: '123456',
-  role: 'executive',
-  isAdmin: true,
-  permissions: [...ALL_PERMISSIONS]
+  role: 'employee',
+  isAdmin: false,
+  permissions: [...SUBMIT_PERMS]
 }));
 
-const users = [...baseUsers, ...fullAccessTeam];
+const users = [...baseUsers, ...adminTeam, ...inputTeam];
 
 (async () => {
   try {

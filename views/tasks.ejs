@@ -58,7 +58,7 @@
                    const due = new Date(t.dueDate);
                    const isLate = !isDone && due < new Date(new Date().setHours(0,0,0,0));
               %>
-                <li class="task-item <%= isExecutive ? 'is-readonly' : '' %> <%= isDone ? 'is-done' : '' %> <%= isLate ? 'is-late' : '' %>" data-id="<%= t._id %>">
+                <li class="task-item <%= isExecutive && !t.owner ? 'is-readonly' : '' %> <%= isDone ? 'is-done' : '' %> <%= isLate ? 'is-late' : '' %>" data-id="<%= t._id %>">
                   <% if (isExecutive) { %>
                   <span class="task-check task-check-readonly" aria-hidden="true">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
@@ -100,6 +100,16 @@
                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-2 14a2 2 0 01-2 2H9a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
                     </button>
                   </form>
+                  <% } else if (t.owner) { %>
+                  <button type="button" class="task-notify-btn"
+                          data-notify="<%= t._id %>"
+                          data-owner-name="<%= t.owner.name %>"
+                          data-task-title="<%= t.title %>"
+                          aria-label="إرسال إشعار لصاحب المهمة"
+                          title="إرسال إشعار لصاحب المهمة">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8a6 6 0 10-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+                    <span>إشعار</span>
+                  </button>
                   <% } %>
                 </li>
               <% }) %>
@@ -109,6 +119,35 @@
       </section>
     </main>
   </div>
+
+  <% if (isExecutive) { %>
+  <div class="modal" id="taskNotifyModal" hidden>
+    <div class="modal-backdrop" data-close></div>
+    <div class="modal-card">
+      <div class="modal-head">
+        <h3>إرسال إشعار لصاحب المهمة</h3>
+        <button class="modal-close" type="button" data-close aria-label="إغلاق">×</button>
+      </div>
+      <form id="taskNotifyForm" class="form-grid">
+        <div class="task-notify-target muted" id="taskNotifyTarget"></div>
+        <label class="field field-full">
+          <span>العنوان</span>
+          <input type="text" name="title" required maxlength="120" placeholder="مثال: يرجى المتابعة على المهمة">
+        </label>
+        <label class="field field-full">
+          <span>التفاصيل (اختياري)</span>
+          <textarea name="body" rows="3" maxlength="600" placeholder="رسالة مختصرة للموظف"></textarea>
+        </label>
+        <div class="form-actions">
+          <button type="button" class="btn btn-ghost" data-close>إلغاء</button>
+          <button type="submit" class="btn btn-primary" id="taskNotifySubmit">إرسال الإشعار</button>
+        </div>
+        <div class="form-status" id="taskNotifyStatus" hidden></div>
+      </form>
+    </div>
+  </div>
+  <% } %>
+
   <script src="/js/tasks.js"></script>
 </body>
 </html>

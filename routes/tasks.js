@@ -3,6 +3,7 @@ const router = express.Router();
 const { requireLogin } = require('../middleware/auth');
 const Task = require('../models/Task');
 const User = require('../models/User');
+const Notification = require('../models/Notification');
 
 router.use(requireLogin);
 
@@ -69,6 +70,48 @@ router.post('/:id/toggle', async (req, res, next) => {
     await task.save();
     req.app.get('io').emit('tasks:updated');
     res.json({ ok: true, status: task.status, completedAt: task.completedAt });
+  } catch (err) { next(err); }
+});
+
+router.post('/:id/notify', async (req, res, next) => {
+  try {
+    const u = req.session.user;
+    const allowed = u.role === 'executive' || u.isAdmin || (u.permissions || []).includes('sendNotifications');
+    if (!allowed) return res.status(403).json({ error: 'forbidden' });
+
+    const task = await Task.findById(req.params.id).populate('owner', 'name');
+    if (!task || !task.owner) return res.status(404).json({ error: 'not found' });
+    if (String(task.owner._id) === String(u.id)) {
+      return res.status(400).json({ error: 'cannot notify yourself' });
+    }
+
+    const title = (req.body.title || '').toString().trim();
+    const body  = (req.body.body  || '').toString().trim();
+    if (!title) return res.status(400).json({ error: 'missing title' });
+    if (title.length > 160) return res.status(400).json({ error: 'title too long' });
+    if (body.length  > 800) return res.status(400).json({ error: 'body too long' });
+
+    const notif = await Notification.create({
+      recipient: task.owner._id,
+      sender: u.id,
+      title,
+      body: body || `بخصوص المهمة: ${task.title}`,
+      type: 'task',
+      link: '/tasks',
+      groupTag: 'task'
+    });
+
+    const io = req.app.get('io');
+    io.to(`user:${task.owner._id}`).emit('notification:new', {
+      _id: notif._id,
+      title: notif.title,
+      body: notif.body,
+      type: notif.type,
+      link: notif.link,
+      createdAt: notif.createdAt
+    });
+
+    res.json({ ok: true });
   } catch (err) { next(err); }
 });
 

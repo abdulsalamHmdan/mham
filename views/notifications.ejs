@@ -14,11 +14,17 @@
           <h1 class="page-title">الإشعارات</h1>
           <p class="page-sub">آخر التنبيهات والتحديثات الموجهة إليك</p>
         </div>
-        <% if (unreadCount > 0) { %>
-          <form method="POST" action="/notifications/read-all">
-            <button class="btn btn-ghost" type="submit">تعليم الكل كمقروء (<%= unreadCount %>)</button>
-          </form>
-        <% } %>
+        <div class="header-actions">
+          <button type="button" class="btn btn-primary" id="activateNotifBtn" data-activate-notifications>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16" aria-hidden="true"><path d="M18 8a6 6 0 10-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+            <span data-activate-label>تفعيل الإشعارات</span>
+          </button>
+          <% if (unreadCount > 0) { %>
+            <form method="POST" action="/notifications/read-all" class="inline">
+              <button class="btn btn-ghost" type="submit">تعليم الكل كمقروء (<%= unreadCount %>)</button>
+            </form>
+          <% } %>
+        </div>
       </header>
 
       <% if (canSend) { %>

@@ -1,4 +1,31 @@
 (function () {
+  // -------- Activate-notifications button --------
+  const activateBtn = document.getElementById('activateNotifBtn');
+  if (activateBtn) {
+    function refreshActivateBtn() {
+      const label = activateBtn.querySelector('[data-activate-label]');
+      const status = (window.getNotifStatus && window.getNotifStatus()) || 'default';
+      const labels = {
+        'granted':       'الإشعارات مفعّلة ✓',
+        'denied':        'الإشعارات معطّلة — اضغط للمساعدة',
+        'ios-needs-pwa': 'تفعيل الإشعارات على iPhone',
+        'unsupported':   'غير مدعوم في هذا المتصفح',
+        'default':       'تفعيل الإشعارات'
+      };
+      if (label) label.textContent = labels[status] || labels['default'];
+      activateBtn.classList.toggle('is-active', status === 'granted');
+      activateBtn.classList.toggle('is-disabled', status === 'unsupported');
+    }
+    refreshActivateBtn();
+    activateBtn.addEventListener('click', () => {
+      if (window.activateNotifications) window.activateNotifications();
+      setTimeout(refreshActivateBtn, 600);
+    });
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') refreshActivateBtn();
+    });
+  }
+
   const audience = document.getElementById('audienceSelect');
   const recipientsField = document.getElementById('recipientsField');
   const recipientsList = document.getElementById('recipientsList');
