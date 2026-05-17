@@ -18,7 +18,14 @@
       "Bash(node --check routes/notifications.js)",
       "Bash(node --check routes/tasks.js)",
       "Bash(node --check services/pushService.js)",
-      "Bash(node --check models/PushSubscription.js)"
+      "Bash(node --check models/PushSubscription.js)",
+      "Bash(node --check public/js/notif-bell.js)",
+      "Bash(dir \"C:\\\\Users\\\\asus\\\\Desktop\\\\mham\" /B)",
+      "Bash(dir \"C:\\\\Users\\\\asus\\\\Desktop\\\\mham\\\\routes\" /B)",
+      "Bash(dir \"C:\\\\Users\\\\asus\\\\Desktop\\\\mham\\\\views\" /B)",
+      "Bash(dir \"C:\\\\Users\\\\asus\\\\Desktop\\\\mham\\\\models\" /B)",
+      "Bash(node -e \"require\\('./models/Achievement'\\); require\\('./routes/achievements'\\); console.log\\('OK'\\);\")",
+      "Bash(node -e \"const ejs=require\\('ejs'\\); const fs=require\\('fs'\\); ejs.compile\\(fs.readFileSync\\('views/achievements.ejs','utf8'\\), {filename:'views/achievements.ejs'}\\); console.log\\('EJS OK'\\);\")"
     ]
   }
 }

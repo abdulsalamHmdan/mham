@@ -26,6 +26,10 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
         <span><%= user.role === 'executive' ? 'متابعة المهام' : 'مهامي' %></span>
       </a>
+      <a class="nav-link <%= path.startsWith('/achievements') ? 'active' : '' %>" href="/achievements">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 21h8M12 17v4"/><path d="M17 4h3a1 1 0 011 1v2a4 4 0 01-4 4M7 4H4a1 1 0 00-1 1v2a4 4 0 004 4"/><path d="M17 4H7v6a5 5 0 0010 0V4z"/></svg>
+        <span>المنجزات</span>
+      </a>
       <a class="nav-link <%= path.startsWith('/notifications') ? 'active' : '' %>" href="/notifications">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8a6 6 0 10-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
         <span>الإشعارات</span>

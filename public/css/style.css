@@ -635,7 +635,8 @@ video.table-thumb { object-fit: cover; }
 .task-pending { color: #92400e; background: var(--media-soft) !important; border-color: #fde68a !important; }
 .task-late    { color: #991b1b; background: #fee2e2 !important; border-color: #fecaca !important; }
 .task-done-at { color: #065f46; background: var(--financial-soft) !important; border-color: #a7f3d0 !important; }
-.task-owner   { color: #1d4ed8; background: #dbeafe !important; border-color: #bfdbfe !important; }
+.task-owner       { color: #1d4ed8; background: #dbeafe !important; border-color: #bfdbfe !important; }
+.task-assigned-by { color: #6d28d9; background: #ede9fe !important; border-color: #ddd6fe !important; }
 
 .task-delete button {
   background: transparent;
@@ -649,6 +650,36 @@ video.table-thumb { object-fit: cover; }
 .task-delete button svg { width: 16px; height: 16px; }
 .task-delete button:hover { background: #fee2e2; color: var(--status-late); }
 .task-delete { margin: 0; }
+
+/* ==========================================================
+   Achievements — evidence block inside task-item
+   ========================================================== */
+.achv-evidence {
+  margin-top: 10px;
+  padding: 10px 12px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+.achv-evidence-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-soft);
+  margin-bottom: 6px;
+}
+.achv-evidence-text {
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-size: 14px;
+  color: var(--navy-900);
+}
+.achv-evidence-media {
+  max-width: 100%;
+  max-height: 280px;
+  border-radius: 8px;
+  display: block;
+}
+.btn-sm { padding: 6px 12px; font-size: 13px; }
 
 /* ==========================================================
    Login

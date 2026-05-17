@@ -16,7 +16,46 @@
         </div>
       </header>
 
-      <% if (!isExecutive) { %>
+      <% if (canAssign) { %>
+      <section class="panel">
+        <div class="panel-head">
+          <h3>إسناد مهمة لموظف</h3>
+          <span class="muted">سيصل الموظف إشعار فوري بالمهمة</span>
+        </div>
+        <div class="panel-body">
+          <% if (!employees.length) { %>
+            <div class="empty">لا يوجد موظفون حاليّون لإسناد المهام إليهم.</div>
+          <% } else { %>
+          <form method="POST" action="/tasks" class="form-grid">
+            <label class="field field-full">
+              <span>اسم المهمة</span>
+              <input type="text" name="title" required placeholder="مثال: تجهيز تقرير الإيرادات الشهري">
+            </label>
+            <label class="field">
+              <span>الموظف المُسند إليه</span>
+              <select name="owner" required>
+                <option value="">— اختر موظفاً —</option>
+                <% employees.forEach(function(emp) { %>
+                  <option value="<%= emp._id %>"><%= emp.name %><% if (emp.department) { %> — <%= emp.department %><% } %></option>
+                <% }) %>
+              </select>
+            </label>
+            <label class="field">
+              <span>تاريخ النهاية</span>
+              <input type="date" name="dueDate" required value="<%= new Date(Date.now()+86400000).toISOString().slice(0,10) %>">
+            </label>
+            <label class="field field-full">
+              <span>وصف (اختياري)</span>
+              <textarea name="description" rows="2" placeholder="تفاصيل المهمة للموظف"></textarea>
+            </label>
+            <div class="form-actions">
+              <button type="submit" class="btn btn-primary">إسناد المهمة</button>
+            </div>
+          </form>
+          <% } %>
+        </div>
+      </section>
+      <% } else { %>
       <section class="panel">
         <div class="panel-head">
           <h3>إضافة مهمة جديدة</h3>
@@ -76,6 +115,12 @@
                         <span class="task-owner">
                           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M20 21a8 8 0 10-16 0"/><circle cx="12" cy="7" r="4"/></svg>
                           <%= t.owner.name %>
+                        </span>
+                      <% } %>
+                      <% if (t.assignedBy && t.assignedBy.name) { %>
+                        <span class="task-assigned-by" title="مُسندة من المدير">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="10"/></svg>
+                          من: <%= t.assignedBy.name %>
                         </span>
                       <% } %>
                       <span class="task-due">

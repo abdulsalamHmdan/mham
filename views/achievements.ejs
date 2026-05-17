@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <%- include('partials/head') %>
+</head>
+<body>
+  <div class="layout">
+    <%- include('partials/sidebar') %>
+
+    <main class="main">
+      <header class="page-header">
+        <div>
+          <h1 class="page-title">المنجزات</h1>
+          <p class="page-sub">
+            <%= canViewAll ? 'توثيق المهام والمنجزات غير المجدولة لجميع الموظفين' : 'وثّق منجزاتك ومهامك غير المجدولة مع الشواهد والإثباتات' %>
+          </p>
+        </div>
+      </header>
+
+      <% const FLASH_MSG = {
+           created: { type: 'success', text: 'تم تسجيل المنجز بنجاح.' },
+           missingTitle: { type: 'error', text: 'يجب إدخال عنوان المنجز.' },
+           noEvidenceFile: { type: 'error', text: 'لم يتم اختيار ملف الشاهد.' },
+           tooLarge: { type: 'error', text: 'حجم الملف يتجاوز 50 ميجا.' },
+           badFile: { type: 'error', text: 'نوع الملف غير مدعوم. الأنواع المسموحة: صورة، فيديو، PDF.' },
+           storage: { type: 'error', text: 'فشل رفع الملف إلى التخزين السحابي.' }
+         };
+         const flashMsg = FLASH_MSG[flash]; %>
+      <% if (flashMsg) { %>
+        <div class="alert alert-<%= flashMsg.type %>"><%= flashMsg.text %></div>
+      <% } %>
+
+      <section class="panel">
+        <div class="panel-head">
+          <h3>تسجيل منجز جديد</h3>
+          <span class="muted">المهام غير المجدولة التي أنجزتها</span>
+        </div>
+        <div class="panel-body">
+          <form method="POST" action="/achievements" class="form-grid" enctype="multipart/form-data">
+            <label class="field field-full">
+              <span>عنوان المنجز</span>
+              <input type="text" name="title" required maxlength="200" placeholder="مثال: تجهيز تقرير طارئ للإدارة">
+            </label>
+
+            <label class="field field-full">
+              <span>وصف المنجز</span>
+              <textarea name="description" rows="3" maxlength="2000" placeholder="اشرح المنجز باختصار"></textarea>
+            </label>
+
+            <label class="field field-full">
+              <span>نوع الشواهد والإثباتات</span>
+              <select name="evidenceType" data-evidence-type>
+                <option value="none">بدون شواهد</option>
+                <option value="text">روابط ونص</option>
+                <option value="media">وسائط (صورة / فيديو / PDF)</option>
+              </select>
+            </label>
+
+            <label class="field field-full" data-evidence-pane="text" style="display:none;">
+              <span>الشواهد (روابط أو نص)</span>
+              <textarea name="evidenceText" rows="3" placeholder="ألصق الروابط أو اكتب الشواهد هنا" disabled></textarea>
+            </label>
+
+            <label class="field field-full" data-evidence-pane="media" style="display:none;">
+              <span>ملف الشاهد (حتى 50 ميجا)</span>
+              <input type="file" name="evidenceFile" accept="image/*,video/*,application/pdf" disabled>
+            </label>
+
+            <div class="form-actions">
+              <button type="submit" class="btn btn-primary">تسجيل المنجز</button>
+            </div>
+          </form>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-head">
+          <h3><%= canViewAll ? 'منجزات الموظفين' : 'منجزاتي' %></h3>
+          <span class="muted"><%= achievements.length %> منجز</span>
+        </div>
+        <div class="panel-body">
+          <% if (!achievements.length) { %>
+            <div class="empty"><%= canViewAll ? 'لا توجد منجزات مسجلة بعد.' : 'لم تسجل أي منجز بعد. ابدأ بإضافة منجز جديد.' %></div>
+          <% } else { %>
+            <ul class="task-list">
+              <% achievements.forEach(function(a) { %>
+                <li class="task-item is-done" data-id="<%= a._id %>">
+                  <span class="task-check task-check-readonly" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+                  </span>
+                  <div class="task-body">
+                    <div class="task-title"><%= a.title %></div>
+                    <% if (a.description) { %><div class="task-desc"><%= a.description %></div><% } %>
+                    <div class="task-meta">
+                      <% if (canViewAll && a.owner) { %>
+                        <span class="task-owner">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M20 21a8 8 0 10-16 0"/><circle cx="12" cy="7" r="4"/></svg>
+                          <%= a.owner.name %>
+                        </span>
+                      <% } %>
+                      <span class="task-done-at">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                        <%= new Date(a.createdAt).toLocaleString('ar-SA') %>
+                      </span>
+                    </div>
+
+                    <% if (a.evidenceType === 'text' && a.evidenceText) { %>
+                      <div class="achv-evidence">
+                        <div class="achv-evidence-label">الشواهد:</div>
+                        <div class="achv-evidence-text"><%= a.evidenceText %></div>
+                      </div>
+                    <% } else if (a.evidenceType === 'media' && a.evidencePath) {
+                         const mt = a.evidenceMediaType || 'image'; %>
+                      <div class="achv-evidence">
+                        <div class="achv-evidence-label">الشاهد:</div>
+                        <% if (mt === 'video') { %>
+                          <video class="achv-evidence-media" src="<%= a.evidencePath %>" controls muted playsinline preload="metadata"></video>
+                        <% } else if (mt === 'pdf') { %>
+                          <a href="<%= a.evidencePath %>" target="_blank" rel="noopener" class="btn btn-secondary btn-sm">📄 فتح ملف PDF</a>
+                        <% } else { %>
+                          <a href="<%= a.evidencePath %>" target="_blank" rel="noopener">
+                            <img class="achv-evidence-media" src="<%= a.evidencePath %>" alt="شاهد المنجز">
+                          </a>
+                        <% } %>
+                      </div>
+                    <% } %>
+                  </div>
+                  <% const canDelete = user.isAdmin || String(a.owner && a.owner._id || a.owner) === String(user.id); %>
+                  <% if (canDelete) { %>
+                  <form method="POST" action="/achievements/<%= a._id %>/delete" class="task-delete" onsubmit="return confirm('هل تريد حذف هذا المنجز؟');">
+                    <button type="submit" aria-label="حذف" title="حذف">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-2 14a2 2 0 01-2 2H9a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
+                    </button>
+                  </form>
+                  <% } %>
+                </li>
+              <% }) %>
+            </ul>
+          <% } %>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    (function () {
+      const alert = document.querySelector('.alert-success');
+      if (alert) {
+        setTimeout(() => {
+          alert.style.transition = 'opacity 400ms, transform 400ms';
+          alert.style.opacity = '0';
+          alert.style.transform = 'translateY(-6px)';
+          setTimeout(() => alert.remove(), 420);
+        }, 3500);
+      }
+
+      const select = document.querySelector('[data-evidence-type]');
+      if (select) {
+        const panes = document.querySelectorAll('[data-evidence-pane]');
+        const update = () => {
+          panes.forEach(p => {
+            const match = p.getAttribute('data-evidence-pane') === select.value;
+            p.style.display = match ? '' : 'none';
+            p.querySelectorAll('input, textarea').forEach(el => {
+              el.disabled = !match;
+            });
+          });
+        };
+        select.addEventListener('change', update);
+        update();
+      }
+    })();
+  </script>
+</body>
+</html>

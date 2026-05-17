@@ -62,6 +62,7 @@ app.use('/', require('./routes/auth'));
 app.use('/dashboard', require('./routes/dashboard'));
 app.use('/employee', require('./routes/employee'));
 app.use('/tasks', require('./routes/tasks'));
+app.use('/achievements', require('./routes/achievements'));
 app.use('/admin', require('./routes/admin'));
 app.use('/notifications', require('./routes/notifications'));
 app.use('/push', require('./routes/push'));

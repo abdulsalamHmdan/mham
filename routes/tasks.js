@@ -12,7 +12,9 @@ router.get('/', async (req, res, next) => {
   try {
     const isExecutive = req.session.user.role === 'executive';
     const isAdmin = req.session.user.isAdmin;
+    const canAssign = isExecutive || isAdmin;
     let tasks;
+    let employees = [];
 
     if (isAdmin) {
       tasks = await Task.find()
@@ -21,38 +23,100 @@ router.get('/', async (req, res, next) => {
         .sort({ owner: 1, status: 1, dueDate: 1 })
         .lean();
     } else if (isExecutive) {
-      const employees = await User.find({ role: 'employee' }).select('_id').lean();
-      tasks = await Task.find({ owner: { $in: employees.map((employee) => employee._id) } })
+      const empIds = await User.find({ role: 'employee', active: { $ne: false } }).select('_id').lean();
+      tasks = await Task.find({ owner: { $in: empIds.map((employee) => employee._id) } })
         .populate('owner', 'name department role')
+        .populate('assignedBy', 'name')
         .sort({ owner: 1, status: 1, dueDate: 1 })
         .lean();
     } else {
       tasks = await Task.find({ owner: req.session.user.id })
+        .populate('assignedBy', 'name')
         .sort({ status: 1, dueDate: 1 })
+        .lean();
+    }
+
+    if (canAssign) {
+      employees = await User.find({ role: 'employee', active: { $ne: false } })
+        .select('name department')
+        .sort({ name: 1 })
         .lean();
     }
 
     res.render('tasks', {
       title: isExecutive ? 'متابعة المهام' : 'مهامي',
       tasks,
-      isExecutive
+      isExecutive,
+      canAssign,
+      employees
     });
   } catch (err) { next(err); }
 });
 
 router.post('/', async (req, res, next) => {
   try {
-    if (req.session.user.role === 'executive') return res.status(403).redirect('/tasks');
-    const { title, description, dueDate } = req.body;
+    const u = req.session.user;
+    const canAssign = u.role === 'executive' || u.isAdmin;
+    const { title, description, dueDate, owner } = req.body;
     if (!title || !dueDate) return res.redirect('/tasks');
-    await Task.create({
+
+    let targetOwnerId;
+    let assignedBy = null;
+    let isAssignment = false;
+
+    if (canAssign) {
+      // Manager assigning a task to an employee.
+      if (!owner) return res.redirect('/tasks?flash=missingOwner');
+      const employee = await User.findOne({ _id: owner, role: 'employee', active: { $ne: false } }).select('_id name').lean();
+      if (!employee) return res.redirect('/tasks?flash=invalidOwner');
+      targetOwnerId = employee._id;
+      assignedBy = u.id;
+      isAssignment = String(targetOwnerId) !== String(u.id);
+    } else {
+      // Employee creating their own task.
+      targetOwnerId = u.id;
+    }
+
+    const task = await Task.create({
       title: title.trim(),
       description: (description || '').trim(),
       dueDate: new Date(dueDate),
-      owner: req.session.user.id
+      owner: targetOwnerId,
+      assignedBy
     });
-    req.app.get('io').emit('tasks:updated');
-    res.redirect('/tasks');
+
+    const io = req.app.get('io');
+    io.emit('tasks:updated');
+
+    if (isAssignment) {
+      const assignerName = u.name || 'المدير';
+      const notif = await Notification.create({
+        recipient: targetOwnerId,
+        sender: u.id,
+        title: `مهمة جديدة من ${assignerName}`,
+        body: `تم إسناد مهمة لك: ${task.title}`,
+        type: 'task',
+        link: '/tasks',
+        groupTag: 'task-assignment'
+      });
+      io.to(`user:${targetOwnerId}`).emit('notification:new', {
+        _id: notif._id,
+        title: notif.title,
+        body: notif.body,
+        type: notif.type,
+        link: notif.link,
+        createdAt: notif.createdAt
+      });
+      pushService.sendToUser(targetOwnerId, {
+        _id: notif._id,
+        title: notif.title,
+        body: notif.body,
+        type: notif.type,
+        link: notif.link
+      }).catch(err => console.warn('[push] task assignment notify failed:', err.message));
+    }
+
+    res.redirect('/tasks?flash=' + (isAssignment ? 'assigned' : 'created'));
   } catch (err) { next(err); }
 });
 
@@ -125,8 +189,11 @@ router.post('/:id/notify', async (req, res, next) => {
 
 router.post('/:id/delete', async (req, res, next) => {
   try {
-    if (req.session.user.role === 'executive') return res.status(403).redirect('/tasks');
-    await Task.deleteOne({ _id: req.params.id, owner: req.session.user.id });
+    const u = req.session.user;
+    const filter = (u.isAdmin || u.role === 'executive')
+      ? { _id: req.params.id, $or: [{ owner: u.id }, { assignedBy: u.id }] }
+      : { _id: req.params.id, owner: u.id };
+    await Task.deleteOne(filter);
     req.app.get('io').emit('tasks:updated');
     res.redirect('/tasks');
   } catch (err) { next(err); }

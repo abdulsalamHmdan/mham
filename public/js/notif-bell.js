@@ -51,12 +51,14 @@
 
   async function registerServiceWorker() {
     if (!supportsSW) return null;
-    if (swRegistration) return swRegistration;
     try {
-      swRegistration = await navigator.serviceWorker.register('/sw.js', { scope: '/' });
-      log('SW registered, scope:', swRegistration.scope);
-      try { await navigator.serviceWorker.ready; } catch (e) {}
-      return swRegistration;
+      // Always register (it's idempotent) so the SW file is fresh.
+      await navigator.serviceWorker.register('/sw.js', { scope: '/' });
+      // Wait until the SW is active — pushManager.subscribe needs an active SW.
+      const reg = await navigator.serviceWorker.ready;
+      swRegistration = reg;
+      log('SW ready, scope:', reg.scope, 'active:', !!reg.active);
+      return reg;
     } catch (e) {
       warn('SW registration failed:', e);
       return null;
@@ -64,14 +66,15 @@
   }
 
   async function subscribePush() {
-    if (!supportsSW || !supportsPush) {
-      warn('Push not supported in this browser');
-      return { ok: false, reason: 'unsupported' };
-    }
+    if (!supportsSW) return { ok: false, reason: 'no-service-worker' };
+    if (!supportsPush) return { ok: false, reason: 'no-pushmanager (iOS غير محدث أو ليس PWA)' };
+
     const reg = await registerServiceWorker();
-    if (!reg) return { ok: false, reason: 'sw-failed' };
+    if (!reg) return { ok: false, reason: 'sw-registration-failed' };
+    if (!reg.pushManager) return { ok: false, reason: 'no-pushmanager-on-registration' };
+
     const key = await getVapidKey();
-    if (!key) return { ok: false, reason: 'no-vapid' };
+    if (!key) return { ok: false, reason: 'vapid-key-missing (تحقق من .env وأعد تشغيل الخادم)' };
 
     let sub;
     try {
@@ -86,8 +89,8 @@
         log('Reusing existing push subscription');
       }
     } catch (e) {
-      warn('push subscribe failed:', e);
-      return { ok: false, reason: 'subscribe-failed', error: e.message };
+      warn('pushManager.subscribe failed:', e.name, e.message);
+      return { ok: false, reason: 'pushManager.subscribe: ' + (e.name || 'Error'), error: e.message };
     }
 
     try {
@@ -101,7 +104,7 @@
       if (!r.ok) {
         const t = await r.text().catch(()=>'');
         warn('subscribe save failed', r.status, t);
-        return { ok: false, reason: 'save-failed', status: r.status };
+        return { ok: false, reason: 'server-save-' + r.status, error: t };
       }
       log('Subscription saved on server');
       return { ok: true };
