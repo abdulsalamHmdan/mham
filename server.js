@@ -27,6 +27,14 @@ app.get('/manifest.webmanifest', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'manifest.webmanifest'));
 });
 
+// Service worker — must be served from site root with no caching so updates apply.
+app.get('/sw.js', (req, res) => {
+  res.set('Content-Type', 'application/javascript; charset=utf-8');
+  res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+  res.set('Service-Worker-Allowed', '/');
+  res.sendFile(path.join(__dirname, 'public', 'sw.js'));
+});
+
 app.use(express.static(path.join(__dirname, 'public'), {
   setHeaders(res, filePath) {
     if (filePath.endsWith('.svg')) res.set('Cache-Control', 'public, max-age=86400');
@@ -56,6 +64,7 @@ app.use('/employee', require('./routes/employee'));
 app.use('/tasks', require('./routes/tasks'));
 app.use('/admin', require('./routes/admin'));
 app.use('/notifications', require('./routes/notifications'));
+app.use('/push', require('./routes/push'));
 app.use('/api', require('./routes/api'));
 
 app.use((req, res) => {

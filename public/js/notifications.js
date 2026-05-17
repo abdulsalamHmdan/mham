@@ -26,6 +26,35 @@
     });
   }
 
+  // -------- Test push button --------
+  const testBtn = document.getElementById('testPushBtn');
+  if (testBtn) {
+    testBtn.addEventListener('click', async () => {
+      const original = testBtn.innerHTML;
+      testBtn.disabled = true;
+      testBtn.textContent = 'جاري الإرسال...';
+      try {
+        const r = await fetch('/push/test', { method: 'POST', credentials: 'include' });
+        const d = await r.json().catch(() => ({}));
+        if (r.ok && d.ok) {
+          testBtn.textContent = `✓ تم — ${d.sent}/${d.subs} جهاز`;
+        } else if (d.subs === 0) {
+          testBtn.textContent = '⚠ لا يوجد اشتراك — اضغط «تفعيل»';
+        } else if (r.status === 503) {
+          testBtn.textContent = '⚠ Push غير مهيأ على الخادم';
+        } else {
+          testBtn.textContent = '✗ فشل: ' + (d.error || r.status);
+        }
+      } catch (e) {
+        testBtn.textContent = '✗ خطأ في الشبكة';
+      }
+      setTimeout(() => {
+        testBtn.innerHTML = original;
+        testBtn.disabled = false;
+      }, 3500);
+    });
+  }
+
   const audience = document.getElementById('audienceSelect');
   const recipientsField = document.getElementById('recipientsField');
   const recipientsList = document.getElementById('recipientsList');

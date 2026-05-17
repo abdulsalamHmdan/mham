@@ -4,6 +4,7 @@ const { requireLogin } = require('../middleware/auth');
 const Task = require('../models/Task');
 const User = require('../models/User');
 const Notification = require('../models/Notification');
+const pushService = require('../services/pushService');
 
 router.use(requireLogin);
 
@@ -110,8 +111,15 @@ router.post('/:id/notify', async (req, res, next) => {
       link: notif.link,
       createdAt: notif.createdAt
     });
+    const pushResult = await pushService.sendToUser(task.owner._id, {
+      _id: notif._id,
+      title: notif.title,
+      body: notif.body,
+      type: notif.type,
+      link: notif.link
+    }).catch(err => { console.warn('[push] task notify failed:', err.message); return { sent: 0, failed: 0 }; });
 
-    res.json({ ok: true });
+    res.json({ ok: true, push: pushResult });
   } catch (err) { next(err); }
 });
 

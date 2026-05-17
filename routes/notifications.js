@@ -3,6 +3,7 @@ const router = express.Router();
 const { requireLogin } = require('../middleware/auth');
 const User = require('../models/User');
 const Notification = require('../models/Notification');
+const pushService = require('../services/pushService');
 
 router.use(requireLogin);
 
@@ -125,8 +126,16 @@ router.post('/send', async (req, res, next) => {
         title: n.title,
         body: n.body,
         type: n.type,
+        link: '/notifications',
         createdAt: n.createdAt
       });
+      pushService.sendToUser(n.recipient, {
+        _id: n._id,
+        title: n.title,
+        body: n.body,
+        type: n.type,
+        link: '/notifications'
+      }).catch(err => console.warn('[push] sendToUser failed:', err.message));
     });
 
     res.redirect('/notifications?flash=sent');

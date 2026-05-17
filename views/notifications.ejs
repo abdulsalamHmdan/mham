@@ -19,6 +19,10 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16" aria-hidden="true"><path d="M18 8a6 6 0 10-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
             <span data-activate-label>تفعيل الإشعارات</span>
           </button>
+          <button type="button" class="btn btn-ghost" id="testPushBtn" title="إرسال إشعار اختباري لنفسي">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16" aria-hidden="true"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+            <span>إشعار اختباري</span>
+          </button>
           <% if (unreadCount > 0) { %>
             <form method="POST" action="/notifications/read-all" class="inline">
               <button class="btn btn-ghost" type="submit">تعليم الكل كمقروء (<%= unreadCount %>)</button>
