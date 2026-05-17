@@ -1,0 +1,29 @@
+{
+  "name": "الاتصال المؤسسي",
+  "short_name": "الاتصال",
+  "description": "لوحة متابعة الاتصال المؤسسي",
+  "start_url": "/",
+  "scope": "/",
+  "id": "/",
+  "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
+  "orientation": "portrait",
+  "background_color": "#f4f6fb",
+  "theme_color": "#0f1f3d",
+  "lang": "ar",
+  "dir": "rtl",
+  "icons": [
+    {
+      "src": "/img/logo.png",
+      "type": "image/png",
+      "sizes": "1254x1254",
+      "purpose": "any"
+    },
+    {
+      "src": "/img/logo.png",
+      "type": "image/png",
+      "sizes": "1254x1254",
+      "purpose": "maskable"
+    }
+  ]
+}

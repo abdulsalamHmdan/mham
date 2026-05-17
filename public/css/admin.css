@@ -299,6 +299,18 @@ fieldset.field legend {
 [dir="rtl"] .notif-perm-prompt { transform: translateX(-50%); }
 
 /* ==========================================================
+   PWA standalone mode — respect iPhone safe-areas
+   ========================================================== */
+html.is-pwa body { min-height: 100vh; }
+html.is-ios-pwa body {
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+  background: var(--surface, #f4f6fb);
+}
+
+/* ==========================================================
    Notification activation button + iOS guidance modal
    ========================================================== */
 .header-actions {

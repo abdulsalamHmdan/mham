@@ -19,7 +19,19 @@ app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
-app.use(express.static(path.join(__dirname, 'public')));
+
+// PWA: serve manifest with correct MIME type, ensure short cache so updates roll out.
+app.get('/manifest.webmanifest', (req, res) => {
+  res.set('Content-Type', 'application/manifest+json; charset=utf-8');
+  res.set('Cache-Control', 'public, max-age=300');
+  res.sendFile(path.join(__dirname, 'public', 'manifest.webmanifest'));
+});
+
+app.use(express.static(path.join(__dirname, 'public'), {
+  setHeaders(res, filePath) {
+    if (filePath.endsWith('.svg')) res.set('Cache-Control', 'public, max-age=86400');
+  }
+}));
 
 const sessionMiddleware = session({
   secret: SESSION_SECRET,
